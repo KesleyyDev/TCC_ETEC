@@ -1,0 +1,50 @@
+# Regras do Projeto TCC - Marcenaria Nanias
+
+## Contexto do Projeto
+- **Objetivo:** Site de divulgação e vendas para marcenaria (Catálogo -> Contato WhatsApp/E-mail).
+- **Stack:** PHP, MySQL, HTML5, CSS3, JS.
+- **Frameworks:** Bootstrap (Local) e FontAwesome (Local em /awesome/).
+
+## Instruções de Design (CRÍTICO)
+- **Cores:** SEMPRE consulte as variáveis `:root` no `css/style.css`. Proibido inventar cores.
+- **Responsividade:** Use exclusivamente Grid/Classes do Bootstrap local.
+- **Ícones:** Use apenas a biblioteca local em `css/awesome/` e `js/awesome/`.
+- **Ativos:** Não utilize CDNs externos. Use caminhos locais para `/css/bootstrap/`, `/js/bootstrap/`, etc.
+
+## Estrutura de Desenvolvimento PHP
+- **Templates:** O projeto usa `include` para `header.php`, `footer.php` e `functions.php` da pasta `/inc`.
+- **Lógica:** Verifique sempre se funções necessárias estão em `inc/functions.php` antes de aplicá-las.
+- **Nova Organização de Páginas:** As páginas principais de conteúdo foram movidas para a pasta `/paginas`. Sempre atualize os caminhos de link no `header.php` para refletir isso.
+
+## Estrutura de Pastas Atualizada
+/TCC
+├── .clinerules
+├── config.php
+├── index.php
+├── prompt.txt
+├── /css
+│   ├── /awesome
+│   ├── /bootstrap
+│   └── style.css
+├── /gestao
+├── /img
+├── /inc
+│   ├── database.php
+│   ├── footer.php
+│   ├── functions.php
+│   └── header.php
+├── /js
+│   ├── /awesome
+│   └── /bootstrap
+├── /paginas
+│   ├── catalogomateriais.php
+│   ├── catalogomoveis.php
+│   ├── duvidas.php
+│   ├── login.php
+│   ├── quem-somos.php
+│   └── suporte.php
+└── /sobrenos
+
+## Comportamento do Agente
+- Sempre verifique a existência de arquivos antes de criar novos.
+- Ao editar arquivos dentro de `/paginas`, lembre-se que os caminhos para os arquivos da pasta `/inc` devem subir um nível (ex: `../inc/header.php`).
