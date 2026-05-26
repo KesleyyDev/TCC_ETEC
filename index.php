@@ -40,7 +40,7 @@ include(HEADER_TEMPLATE);
                 <div class="card h-100 border-0 shadow-sm feature-card">
                     <div class="card-body text-center p-5">
                         <div class="icon-box mb-4 mx-auto">
-                            <i class="fa-solid fa-ruler-combined fa-2x"></i>
+                            <i class="fa-solid fa-ruler-combined fa-2x" style="color: var(--logo-claro);"></i>
                         </div>
                         <h4 class="fw-bold mb-3">Sob Medida</h4>
                         <p class="text-muted mb-0">Projetos 100% personalizados para aproveitar cada centímetro do seu ambiente.</p>
@@ -51,7 +51,7 @@ include(HEADER_TEMPLATE);
                 <div class="card h-100 border-0 shadow-sm feature-card">
                     <div class="card-body text-center p-5">
                         <div class="icon-box mb-4 mx-auto">
-                            <i class="fa-solid fa-leaf fa-2x"></i>
+                            <i class="fa-solid fa-leaf fa-2x" style="color: var(--logo-claro);"></i>
                         </div>
                         <h4 class="fw-bold mb-3">Materiais Premium</h4>
                         <p class="text-muted mb-0">Utilizamos MDF e madeiras de fornecedores certificados e de altíssima durabilidade.</p>
@@ -62,7 +62,7 @@ include(HEADER_TEMPLATE);
                 <div class="card h-100 border-0 shadow-sm feature-card">
                     <div class="card-body text-center p-5">
                         <div class="icon-box mb-4 mx-auto">
-                            <i class="fa-solid fa-truck-fast fa-2x"></i>
+                            <i class="fa-solid fa-truck-fast fa-2x" style="color: var(--logo-claro);"></i>
                         </div>
                         <h4 class="fw-bold mb-3">Entrega no Prazo</h4>
                         <p class="text-muted mb-0">Compromisso com o cronograma. Seu projeto entregue e montado na data combinada.</p>

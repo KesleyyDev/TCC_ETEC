@@ -189,25 +189,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var darkToggle = document.getElementById('darkmode-toggle');
 
     function setDarkMode(enabled) {
-        var icon = darkToggle ? darkToggle.querySelector('i') : null;
         var bannerLogo = document.querySelector('.banner-logo');
         if (enabled) {
             document.body.classList.add('dark-mode');
-            if (icon) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-                icon.style.transform = 'rotate(360deg)';
-            }
             if (bannerLogo && bannerLogo.src.includes('teste.png')) {
                 bannerLogo.src = bannerLogo.src.replace('teste.png', 'logobranco.png');
             }
         } else {
             document.body.classList.remove('dark-mode');
-            if (icon) {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-                icon.style.transform = 'rotate(0deg)';
-            }
             if (bannerLogo && bannerLogo.src.includes('logobranco.png')) {
                 bannerLogo.src = bannerLogo.src.replace('logobranco.png', 'teste.png');
             }
@@ -230,6 +219,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Click toggle
     if (darkToggle) {
         darkToggle.addEventListener('click', function () {
+            darkToggle.classList.add('animating');
+            setTimeout(function () {
+                darkToggle.classList.remove('animating');
+            }, 700);
+            
             var isDark = document.body.classList.contains('dark-mode');
             setDarkMode(!isDark);
         });

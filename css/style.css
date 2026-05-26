@@ -142,6 +142,7 @@ body.dark-mode .process-step h6,
 body.dark-mode .hero-content h1,
 body.dark-mode .hero-content p,
 body.dark-mode label,
+body.dark-mode ::placeholder,
 body.dark-mode p {
     color: #e0d6c2 !important;
 }
@@ -211,6 +212,10 @@ body.dark-mode .navbar-custom .dropdown-menu {
     background-color: #2d3a24 !important;
 }
 
+body.dark-mode .navbar-custom .dropdown-item {
+    color: #f3e8c9 !important;
+}
+
 body.dark-mode .navbar-custom .dropdown-item:hover,
 body.dark-mode .navbar-custom .dropdown-item:focus {
     background-color: rgba(164, 172, 134, 0.2) !important;
@@ -232,20 +237,180 @@ body.dark-mode .form-select {
     color: #e0d6c2;
 }
 
-/* Transição suave entre modos */
-body {
-    transition: background-color 0.4s ease, color 0.4s ease;
-}
 
 /* Toggle dark mode button */
 #darkmode-toggle {
     background: none !important;
     box-shadow: none !important;
     text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
 }
 
-#darkmode-toggle:hover i {
-    transform: rotate(20deg) scale(1.2);
+#darkmode-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode #darkmode-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+#darkmode-toggle .icon-moon,
+#darkmode-toggle .icon-sun {
+    display: inline-block;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s ease;
+}
+
+/* Modo Claro padrão */
+body:not(.dark-mode) .icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+    color: var(--verde-claro) !important;
+}
+
+body:not(.dark-mode) .icon-sun {
+    opacity: 0;
+    transform: rotate(-180deg) scale(0);
+    color: var(--logo-claro) !important;
+    pointer-events: none;
+}
+
+/* Modo Escuro padrão */
+body.dark-mode .icon-moon {
+    opacity: 0;
+    transform: rotate(180deg) scale(0);
+    color: var(--verde-claro) !important;
+    pointer-events: none;
+}
+
+body.dark-mode .icon-sun {
+    opacity: 1;
+    transform: rotate(360deg) scale(1.1);
+    color: var(--logo-claro) !important;
+}
+
+/* Efeitos de Hover padrão */
+#darkmode-toggle:hover .icon-moon {
+    transform: rotate(-25deg) scale(1.2);
+}
+
+body.dark-mode #darkmode-toggle:hover .icon-sun {
+    transform: rotate(385deg) scale(1.3);
+}
+
+/* Quando estiver ativamente animando a transição */
+#darkmode-toggle.animating .icon-moon {
+    animation: morph-to-moon-anim 0.7s forwards;
+}
+
+#darkmode-toggle.animating .icon-sun {
+    animation: morph-out-sun-anim 0.7s forwards;
+}
+
+body.dark-mode #darkmode-toggle.animating .icon-moon {
+    animation: morph-out-moon-anim 0.7s forwards;
+}
+
+body.dark-mode #darkmode-toggle.animating .icon-sun {
+    animation: morph-to-sun-anim 0.7s forwards;
+}
+
+/* Keyframes: Vibração, rotação e transformação gradual (Estilo Paint do usuário) */
+@keyframes morph-to-moon-anim {
+    0% {
+        opacity: 0;
+        transform: rotate(-180deg) scale(0);
+    }
+    20% {
+        opacity: 0.3;
+        transform: rotate(-120deg) scale(0.4) translate(-2px, 1px);
+    }
+    40% {
+        opacity: 0.6;
+        transform: rotate(-60deg) scale(0.8) translate(2px, -2px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: rotate(10deg) scale(1.15) translate(-1px, 2px);
+    }
+    80% {
+        opacity: 0.95;
+        transform: rotate(-5deg) scale(1.05) translate(1px, -1px);
+    }
+    100% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1) translate(0, 0);
+    }
+}
+
+@keyframes morph-out-sun-anim {
+    0% {
+        opacity: 1;
+        transform: rotate(360deg) scale(1.1) translate(0, 0);
+    }
+    30% {
+        opacity: 0.7;
+        transform: rotate(240deg) scale(0.85) translate(2px, -2px);
+    }
+    60% {
+        opacity: 0.3;
+        transform: rotate(120deg) scale(0.4) translate(-2px, 1px);
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(0deg) scale(0) translate(0, 0);
+    }
+}
+
+@keyframes morph-to-sun-anim {
+    0% {
+        opacity: 0;
+        transform: rotate(0deg) scale(0);
+    }
+    20% {
+        opacity: 0.3;
+        transform: rotate(90deg) scale(0.4) translate(2px, -2px);
+    }
+    40% {
+        opacity: 0.6;
+        transform: rotate(180deg) scale(0.8) translate(-1px, 2px);
+    }
+    60% {
+        opacity: 0.8;
+        transform: rotate(270deg) scale(1.2) translate(2px, -1px);
+    }
+    80% {
+        opacity: 0.95;
+        transform: rotate(370deg) scale(1.05) translate(-1px, 1px);
+    }
+    100% {
+        opacity: 1;
+        transform: rotate(360deg) scale(1.1) translate(0, 0);
+    }
+}
+
+@keyframes morph-out-moon-anim {
+    0% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1) translate(0, 0);
+    }
+    30% {
+        opacity: 0.7;
+        transform: rotate(60deg) scale(0.8) translate(-2px, 2px);
+    }
+    60% {
+        opacity: 0.3;
+        transform: rotate(120deg) scale(0.4) translate(1px, -1px);
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(180deg) scale(0) translate(0, 0);
+    }
 }
 
 #darkmode-toggle:focus {
@@ -259,6 +424,7 @@ body {
     color: #222222;
     padding-top: 80px;
     font-family: 'Poppins', sans-serif;
+    transition: background-color 0.4s ease, color 0.4s ease;
     /* Evita que o conteúdo entre debaixo do menu fixo */
 }
 
@@ -594,6 +760,16 @@ body {
     outline-offset: 3px;
 }
 
+/* Botão de acessibilidade no tema escuro */
+body.dark-mode #accessibility-fab {
+    background-color: var(--logo-claro) !important;
+    color: #1a1a1a !important;
+}
+
+body.dark-mode #accessibility-fab:hover {
+    background-color: var(--logo-medio) !important;
+}
+
 /* Painel de acessibilidade */
 #accessibility-panel {
     position: fixed;
@@ -777,6 +953,64 @@ body {
 .acc-reset-btn:hover {
     background-color: var(--botao-escuro);
     color: var(--fundo-creme);
+}
+
+/* Correção de contraste e cores do painel de acessibilidade no tema escuro */
+body.dark-mode #accessibility-panel {
+    background-color: #2a2a2a !important;
+    border: 1px solid var(--logo-claro);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .acc-panel-header {
+    background-color: var(--header-escuro) !important;
+    color: var(--logo-claro) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .acc-panel-header h6,
+body.dark-mode .acc-panel-close {
+    color: var(--logo-claro) !important;
+}
+
+body.dark-mode .acc-option {
+    color: #e0d6c2 !important;
+}
+
+body.dark-mode .acc-option:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.dark-mode .acc-option.active {
+    background-color: rgba(164, 172, 134, 0.25) !important;
+    color: var(--fundo-creme) !important;
+}
+
+body.dark-mode .acc-option i {
+    color: var(--verde-claro) !important;
+}
+
+body.dark-mode .acc-option-group-title {
+    color: var(--logo-claro) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.dark-mode .acc-slider-wrapper label {
+    color: #b0a890 !important;
+}
+
+body.dark-mode .acc-slider-value {
+    color: var(--logo-claro) !important;
+}
+
+body.dark-mode .acc-reset-btn {
+    border-color: var(--logo-claro) !important;
+    color: var(--logo-claro) !important;
+}
+
+body.dark-mode .acc-reset-btn:hover {
+    background-color: var(--logo-claro) !important;
+    color: #1a1a1a !important;
 }
 
 /* Classes de acessibilidade aplicadas ao conteúdo */

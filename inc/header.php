@@ -62,7 +62,10 @@
                 
                 <div class="d-flex align-items-center">
                     <button id="darkmode-toggle" class="nav-link me-3 btn btn-link p-0 border-0" title="Alternar modo escuro" aria-label="Alternar modo escuro" style="font-size: 1.2rem;">
-                        <i class="fa-solid fa-moon" id="darkmode-icon" style="color: var(--verde-claro); transition: transform 0.6s ease;"></i>
+                        <span class="theme-icon-container" style="position: relative; display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; overflow: visible;">
+                            <i class="fa-solid fa-moon icon-moon"></i>
+                            <i class="fa-solid fa-sun icon-sun" style="position: absolute;"></i>
+                        </span>
                     </button>
                     <a href="<?php echo BASEURL; ?>paginas/login.php" class="btn btn-nanias px-4 py-2 rounded-pill">
                         <i class="fa-solid fa-user me-2"></i>Entrar

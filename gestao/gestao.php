@@ -47,7 +47,7 @@ include(HEADER_TEMPLATE);
                     <i class="fa-solid fa-file-csv fa-3x mb-3" style="color: var(--verde-claro);"></i>
                     <h5 class="card-title" style="color: var(--header-escuro);">Gerar Arquivo CSV</h5>
                     <p class="card-text text-muted mb-4">Exporte os dados do sistema em uma planilha CSV.</p>
-                    <a href="csv.php" class="btn px-4" style="background-color: var(--header-escuro); color: var(--fundo-creme); font-weight: 500;">
+                    <a href="csv.php" class="btn px-4" style="background-color: var(--header-escuro); color: #FFFFFF; font-weight: 500;">
                         <i class="fa-solid fa-download me-1"></i> Exportar
                     </a>
                 </div>

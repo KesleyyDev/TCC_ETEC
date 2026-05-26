@@ -12,7 +12,7 @@
 
 <div id="accessibility-panel" role="dialog" aria-label="Opções de Acessibilidade">
     <div class="acc-panel-header">
-        <h6><i class="fa-solid fa-universal-access me-2"></i>Acessibilidade</h6>
+        <h6><i class="fa-solid fa-universal-access me-2" style="color: var(--logo-claro);"></i>Acessibilidade</h6>
         <button class="acc-panel-close" id="acc-close-btn" aria-label="Fechar painel de acessibilidade">&times;</button>
     </div>
     <div class="acc-panel-body">
