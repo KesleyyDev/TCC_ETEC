@@ -126,7 +126,7 @@ include(HEADER_TEMPLATE);
         </div>
     </div>
     <div class="row align-items-start mb-5 slide-up">
-        <div class="col-6 col-lg">
+        <div class="col-12 col-sm-6 col-lg">
             <div class="process-step">
                 <div class="process-icon">
                     <i class="fa-solid fa-comments fa-2x" style="color: var(--logo-escuro);"></i>
@@ -138,7 +138,7 @@ include(HEADER_TEMPLATE);
         <div class="col-auto d-none d-lg-flex process-arrow">
             <i class="fa-solid fa-chevron-right"></i>
         </div>
-        <div class="col-6 col-lg">
+        <div class="col-12 col-sm-6 col-lg">
             <div class="process-step">
                 <div class="process-icon">
                     <i class="fa-solid fa-pencil-ruler fa-2x" style="color: var(--logo-escuro);"></i>
@@ -150,7 +150,7 @@ include(HEADER_TEMPLATE);
         <div class="col-auto d-none d-lg-flex process-arrow">
             <i class="fa-solid fa-chevron-right"></i>
         </div>
-        <div class="col-6 col-lg">
+        <div class="col-12 col-sm-6 col-lg">
             <div class="process-step">
                 <div class="process-icon">
                     <i class="fa-solid fa-hammer fa-2x" style="color: var(--logo-escuro);"></i>
@@ -162,7 +162,7 @@ include(HEADER_TEMPLATE);
         <div class="col-auto d-none d-lg-flex process-arrow">
             <i class="fa-solid fa-chevron-right"></i>
         </div>
-        <div class="col-6 col-lg">
+        <div class="col-12 col-sm-6 col-lg">
             <div class="process-step">
                 <div class="process-icon">
                     <i class="fa-solid fa-truck fa-2x" style="color: var(--logo-escuro);"></i>
@@ -262,7 +262,7 @@ include(HEADER_TEMPLATE);
         <div class="container py-3">
             <h3 class="fw-bold mb-3 text-white">Quer saber mais sobre nosso trabalho?</h3>
             <p class="mb-4 text-white-50 lead">Entre em contato conosco e agende uma visita para conhecer de perto a qualidade Nanias.</p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <div class="d-flex justify-content-center flex-column flex-sm-row gap-3 flex-wrap">
                 <a href="<?php echo BASEURL; ?>paginas/suporte.php" class="btn btn-nanias-light btn-lg px-5 py-3 rounded-pill">
                     <i class="fa-solid fa-envelope me-2"></i>Falar Conosco
                 </a>

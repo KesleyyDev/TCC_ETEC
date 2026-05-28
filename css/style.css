@@ -1280,3 +1280,100 @@ body.acc-reading-guide .acc-reading-line {
     border-bottom-color: var(--logo-medio);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
+
+/* ===================================================
+   RESPONSIVIDADE (MEDIA QUERIES)
+   =================================================== */
+
+@media (max-width: 991px) {
+    .hero-section {
+        padding: 80px 0;
+        min-height: auto;
+    }
+    
+    .hero-content h1 {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content h1 {
+        font-size: 2.25rem;
+    }
+    
+    .hero-content p.lead {
+        font-size: 1.1rem;
+    }
+    
+    .display-3 {
+        font-size: 2.5rem;
+    }
+    
+    .display-5 {
+        font-size: 2.25rem;
+    }
+    
+    .section-title {
+        font-size: 1.75rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .timeline {
+        padding-left: 20px;
+    }
+    
+    .timeline::before {
+        left: 5px;
+    }
+    
+    .timeline-item::before {
+        left: -22px;
+    }
+    
+    .process-step {
+        padding: 15px 5px;
+    }
+    
+    .process-icon {
+        width: 65px;
+        height: 65px;
+    }
+    
+    .process-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .testimonial-card {
+        padding: 20px 15px;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .display-5 {
+        font-size: 2rem;
+    }
+    
+    .btn-lg {
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+    
+    .banner-logo-wrapper {
+        padding-top: 30px;
+    }
+    
+    .stat-card {
+        padding: 20px 15px;
+    }
+    
+    .diff-card {
+        padding: 15px;
+    }
+}

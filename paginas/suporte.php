@@ -29,9 +29,9 @@ require_once ABSPATH . "inc/functions.php";
                     <div class="icon-box-small me-3">
                         <i class="fa-brands fa-whatsapp fa-xl"></i>
                     </div>
-                    <div>
+                    <div style="min-width: 0; flex: 1;">
                         <h6 class="mb-0 text-white-50">WhatsApp / Telefone</h6>
-                        <p class="mb-0 fw-bold">(11) 99999-9999</p>
+                        <p class="mb-0 fw-bold text-break">(11) 99999-9999</p>
                     </div>
                 </div>
 
@@ -39,9 +39,9 @@ require_once ABSPATH . "inc/functions.php";
                     <div class="icon-box-small me-3">
                         <i class="fa-solid fa-envelope fa-xl"></i>
                     </div>
-                    <div>
+                    <div style="min-width: 0; flex: 1;">
                         <h6 class="mb-0 text-white-50">E-mail</h6>
-                        <p class="mb-0 fw-bold">contato@marcenariananias.com.br</p>
+                        <p class="mb-0 fw-bold text-break">contato@marcenariananias.com.br</p>
                     </div>
                 </div>
 
@@ -49,9 +49,9 @@ require_once ABSPATH . "inc/functions.php";
                     <div class="icon-box-small me-3">
                         <i class="fa-solid fa-location-dot fa-xl"></i>
                     </div>
-                    <div>
+                    <div style="min-width: 0; flex: 1;">
                         <h6 class="mb-0 text-white-50">Endereço</h6>
-                        <p class="mb-0 fw-bold">Rua da Marcenaria, 123 - São Paulo, SP</p>
+                        <p class="mb-0 fw-bold text-break">Rua da Marcenaria, 123 - São Paulo, SP</p>
                     </div>
                 </div>
 
@@ -114,6 +114,7 @@ require_once ABSPATH . "inc/functions.php";
     align-items: center;
     justify-content: center;
     color: var(--verde-claro);
+    flex-shrink: 0;
 }
 .social-icon {
     width: 40px;
@@ -126,6 +127,7 @@ require_once ABSPATH . "inc/functions.php";
     color: white;
     text-decoration: none;
     transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 .social-icon:hover {
     background-color: var(--logo-claro);

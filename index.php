@@ -17,7 +17,7 @@ include(HEADER_TEMPLATE);
         <div class="hero-content">
             <h1 class="display-3 fw-bold mb-4">Móveis Planejados com Excelência</h1>
             <p class="lead mb-5">Transformamos seu espaço com marcenaria sob medida, unindo design moderno e a tradição do trabalho bem feito.</p>
-            <div class="d-flex justify-content-center gap-3">
+            <div class="d-flex justify-content-center flex-column flex-sm-row gap-3">
                 <a href="<?php echo BASEURL; ?>paginas/catalogomoveis.php" class="btn btn-nanias btn-lg px-5 py-3 rounded-pill">
                     <i class="fa-solid fa-book-open me-2"></i>Ver Catálogo
                 </a>

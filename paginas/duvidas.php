@@ -151,7 +151,7 @@ include(HEADER_TEMPLATE);
             <div class="cta-section py-5" style="border-radius: 16px;">
                 <h3 class="fw-bold text-white mb-3">Não encontrou sua dúvida?</h3>
                 <p class="text-white-50 mb-4 lead">Fale diretamente com nossa equipe. Estamos prontos para ajudar!</p>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <div class="d-flex justify-content-center flex-column flex-sm-row gap-3 flex-wrap">
                     <a href="<?php echo BASEURL; ?>paginas/suporte.php" class="btn btn-nanias-light btn-lg px-5 py-3 rounded-pill">
                         <i class="fa-solid fa-envelope me-2"></i>Enviar Mensagem
                     </a>
