@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL, -- Senha com hash (ex: password_hash do PHP)
+    imagem_url VARCHAR(255) NULL, -- Caminho relativo do arquivo
+    rule ENUM('admin', 'dono', 'funcionario', 'cliente') NOT NULL DEFAULT 'cliente',
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -60,9 +62,12 @@ CREATE TABLE IF NOT EXISTS mensagens_contato (
 -- INSERÇÃO DE DADOS INICIAIS (SEED) PARA TESTE
 -- ==========================================================
 
--- Usuário Admin Padrão (A senha original é: admin123, hash gerado via password_hash)
-INSERT INTO usuarios (nome, email, senha) VALUES 
-('Administrador', 'admin@marcenariananias.com.br', '$2y$10$U49L0H/q2/EToK.wz.F4KOnqE.R7i.eB/f2J3bBq1J9nF6dF2Z2/q');
+-- Usuário Admin Padrão e Usuários Adicionais (A senha original é: admin123, hash gerado via password_hash)
+INSERT INTO usuarios (nome, email, senha, rule) VALUES 
+('Administrador', 'admin@marcenariananias.com.br', '$2y$10$U49L0H/q2/EToK.wz.F4KOnqE.R7i.eB/f2J3bBq1J9nF6dF2Z2/q', 'admin'),
+('José', 'jose@marcenariananias.com.br', '$2y$10$U49L0H/q2/EToK.wz.F4KOnqE.R7i.eB/f2J3bBq1J9nF6dF2Z2/q', 'dono'),
+('Maria Julia', 'maria@marcenariananias.com.br', '$2y$10$U49L0H/q2/EToK.wz.F4KOnqE.R7i.eB/f2J3bBq1J9nF6dF2Z2/q', 'funcionario'),
+('Alice Ayres', 'alice@marcenariananias.com.br', '$2y$10$U49L0H/q2/EToK.wz.F4KOnqE.R7i.eB/f2J3bBq1J9nF6dF2Z2/q', 'cliente');
 
 -- Categorias Iniciais
 INSERT INTO categorias (nome, tipo) VALUES 
@@ -71,9 +76,7 @@ INSERT INTO categorias (nome, tipo) VALUES
 ('Salas e Home Theater', 'moveis'),
 ('Banheiros', 'moveis'),
 ('MDF', 'materiais'),
-('MDP', 'materiais'),
-('Madeira Maciça', 'materiais'),
-('Laminado Melamínico', 'materiais');
+('Madeira Maciça', 'materiais');
 
 -- Exemplo de Produtos no Catálogo
 INSERT INTO produtos (titulo, descricao, imagem_url, categoria_id, destaque) VALUES

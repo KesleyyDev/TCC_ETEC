@@ -5,13 +5,13 @@ if (!session_id()) {
 }
 
 /** O nome do banco de dados*/
-const DB_NAME = "";
+const DB_NAME = "marcenaria_nanias";
 
 /** nome do host do MySQL */
 const DB_HOST = "localhost";
 
 /** Usuário do banco de dados MySQL */
-const DB_USER = "";
+const DB_USER = "root";
 
 /** Senha do banco de dados MySQL */
 const DB_PASS = "";

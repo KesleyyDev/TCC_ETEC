@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
                     ]);
 
-                    $stmt = $pdo->prepare("SELECT id, nome, email, senha, nivel FROM usuarios WHERE email = :email LIMIT 1");
+                    $stmt = $pdo->prepare("SELECT id, nome, email, senha, rule FROM usuarios WHERE email = :email LIMIT 1");
                     $stmt->execute([':email' => $email]);
                     $usuario = $stmt->fetch();
 
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['usuario_id'] = $usuario['id'];
                         $_SESSION['usuario_nome'] = $usuario['nome'];
                         $_SESSION['usuario_email'] = $usuario['email'];
-                        $_SESSION['usuario_nivel'] = $usuario['nivel'];
+                        $_SESSION['usuario_rule'] = $usuario['rule'];
                         $_SESSION['logado'] = true;
 
                         // Gerar novo token CSRF após login

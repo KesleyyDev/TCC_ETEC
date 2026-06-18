@@ -2,6 +2,19 @@
 require_once "../config.php";
 require_once DBAPI;
 if (!isset($_SESSION)) session_start();
+
+// Controle de Acesso
+if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
+    header("Location: " . BASEURL . "paginas/login.php");
+    exit;
+}
+
+$allowed_rules = ['admin', 'dono', 'funcionario'];
+if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
+    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
+    exit;
+}
+
 include(HEADER_TEMPLATE);
 ?>
 
@@ -49,6 +62,19 @@ include(HEADER_TEMPLATE);
                     <p class="card-text text-muted mb-4">Exporte os dados do sistema em uma planilha CSV.</p>
                     <a href="csv.php" class="btn px-4" style="background-color: var(--header-escuro); color: #FFFFFF; font-weight: 500;">
                         <i class="fa-solid fa-download me-1"></i> Exportar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100 border-0" style="background-color: #ffffff; border-radius: 10px;">
+                <div class="card-body text-center py-5">
+                    <i class="fa-solid fa-users fa-3x mb-3" style="color: var(--botao-escuro);"></i>
+                    <h5 class="card-title" style="color: var(--header-escuro);">Cadastro de Usuários</h5>
+                    <p class="card-text text-muted mb-4">Gerencie os usuários do sistema em formato tabular.</p>
+                    <a href="../cadastro/cadastro_usuarios.php" class="btn px-4" style="background-color: var(--botao-escuro); color: #ffffff; font-weight: 500;">
+                        <i class="fa-solid fa-user-plus me-1"></i> Usuários
                     </a>
                 </div>
             </div>
