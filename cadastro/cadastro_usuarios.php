@@ -9,7 +9,7 @@ if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
     exit;
 }
 
-$allowed_rules = ['admin', 'dono', 'funcionario'];
+$allowed_rules = ['admin', 'dono'];
 if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
     header("Location: " . BASEURL . "index.php?erro=acesso_negado");
     exit;

@@ -1,0 +1,2 @@
+Colocar os materiais divididos por cores, por exemplo
+MDF -> Ter todas as cores cadastradas e no catálogo e deixar a busca por material apenas e deixar com que o cliente escolha a cor.

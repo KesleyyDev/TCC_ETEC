@@ -2,6 +2,46 @@
 require_once "../config.php";
 require_once DBAPI;
 if (!isset($_SESSION)) session_start();
+
+$database = open_database();
+$produtos = [];
+$categorias = [];
+$categoria_filtro = isset($_GET['cat']) ? (int)$_GET['cat'] : null;
+
+if ($database) {
+    try {
+        $stmt_cat = $database->query("SELECT * FROM categorias WHERE tipo = 'moveis' ORDER BY nome ASC");
+        if ($stmt_cat) $categorias = $stmt_cat->fetchAll();
+
+        $sql = "SELECT p.*, c.nome as categoria_nome FROM produtos p LEFT JOIN categorias c ON p.categoria_id = c.id WHERE p.ativo = 1 AND c.tipo = 'moveis'";
+        if ($categoria_filtro) {
+            $sql .= " AND p.categoria_id = :categoria_id";
+        }
+        $sql .= " ORDER BY p.id DESC";
+
+        $stmt = $database->prepare($sql);
+        if ($categoria_filtro) {
+            $stmt->execute([':categoria_id' => $categoria_filtro]);
+        } else {
+            $stmt->execute();
+        }
+        $produtos = $stmt->fetchAll();
+
+        // Buscar imagens da galeria para todos os produtos
+        $galerias = [];
+        $stmt_img = $database->query("SELECT produto_id, imagem_url FROM imagens_produto");
+        if($stmt_img) {
+            $imagens = $stmt_img->fetchAll();
+            foreach($imagens as $img) {
+                $galerias[$img['produto_id']][] = $img['imagem_url'];
+            }
+        }
+    } catch (PDOException $e) {
+        die("Erro ao buscar dados: " . $e->getMessage());
+    }
+    close_database($database);
+}
+
 include(HEADER_TEMPLATE);
 ?>
 
@@ -15,126 +55,99 @@ include(HEADER_TEMPLATE);
 
     <!-- Filtros do Catálogo (UI/UX) -->
     <div class="row mb-5 slide-up delay-1">
-        <div class="col-12 d-flex justify-content-center flex-wrap gap-2">
-            <button class="btn btn-nanias px-4 rounded-pill">Todos</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">Cozinhas</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">Dormitórios</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">Salas</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">Banheiros</button>
+        <div class="col-12 d-flex justify-content-center flex-wrap gap-2" id="filter-buttons">
+            <a href="catalogo.php" class="btn <?php echo !$categoria_filtro ? 'btn-nanias' : 'btn-outline-nanias'; ?> px-4 rounded-pill">Todos</a>
+            <?php foreach($categorias as $cat): ?>
+                <a href="catalogo.php?cat=<?php echo $cat['id']; ?>" class="btn <?php echo ($categoria_filtro == $cat['id']) ? 'btn-nanias' : 'btn-outline-nanias'; ?> px-4 rounded-pill"><?php echo htmlspecialchars($cat['nome']); ?></a>
+            <?php endforeach; ?>
         </div>
     </div>
 
     <!-- Grid de Produtos -->
-    <div class="row g-4 slide-up delay-2">
-        <!-- Produto 1 -->
-        <div class="col-md-6 col-lg-4">
+    <div class="row g-4 slide-up delay-2" id="product-grid">
+        <?php if($produtos): foreach($produtos as $prod): 
+            $imagens_carrossel = [];
+            if (!empty($prod['imagem_url'])) $imagens_carrossel[] = $prod['imagem_url'];
+            if (isset($galerias[$prod['id']])) {
+                $imagens_carrossel = array_merge($imagens_carrossel, $galerias[$prod['id']]);
+            }
+            $carrossel_id = "carousel_prod_" . $prod['id'];
+        ?>
+        <div class="col-md-6 col-lg-4 product-item" data-category="<?php echo $prod['categoria_id']; ?>">
             <div class="card h-100 border-0 shadow-sm product-card">
                 <div class="product-img-wrapper" style="background-color: var(--fundo-creme); height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-kitchen-set fa-5x" style="color: var(--logo-claro);"></i>
+                    <?php if(count($imagens_carrossel) > 1): ?>
+                        <div id="<?php echo $carrossel_id; ?>" class="carousel slide" data-bs-ride="carousel" style="width: 100%; height: 100%;">
+                            <div class="carousel-inner" style="height: 100%;">
+                                <?php foreach($imagens_carrossel as $index => $img_url): ?>
+                                <div class="carousel-item <?php echo $index === 0 ? 'active' : ''; ?>" style="height: 100%;">
+                                    <img src="<?php echo BASEURL . htmlspecialchars($img_url); ?>" class="d-block w-100" style="height: 100%; object-fit: cover;" alt="<?php echo htmlspecialchars($prod['titulo']); ?>">
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#<?php echo $carrossel_id; ?>" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#<?php echo $carrossel_id; ?>" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    <?php elseif(!empty($prod['imagem_url'])): ?>
+                        <img src="<?php echo BASEURL . htmlspecialchars($prod['imagem_url']); ?>" alt="<?php echo htmlspecialchars($prod['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                    <?php else: ?>
+                        <i class="fa-solid fa-couch fa-5x" style="color: var(--logo-claro);"></i>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Cozinha Planejada Premium</h5>
-                    <p class="text-muted mb-4 small">MDF Ultra com acabamento em laca fosca e puxadores em perfil de alumínio champagne.</p>
+                    <h5 class="fw-bold mb-2 text-dark"><?php echo htmlspecialchars($prod['titulo']); ?></h5>
+                    <div class="mb-3">
+                        <span class="badge" style="background-color: var(--verde-claro); color: var(--header-escuro);"><?php echo htmlspecialchars($prod['categoria_nome']); ?></span>
+                    </div>
+                    <p class="text-muted mb-4 small"><?php echo nl2br(htmlspecialchars($prod['descricao'])); ?></p>
                     <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse na Cozinha Planejada Premium" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Orçamento
+                        <a href="<?php echo BASEURL; ?>paginas/orcamento.php?produto=<?php echo $prod['id']; ?>" class="btn btn-outline-nanias w-100 rounded-pill">
+                            <i class="fa-solid fa-file-invoice-dollar me-2"></i>Solicitar Orçamento
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Produto 2 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: #e8dbb4; height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-bed fa-5x" style="color: var(--logo-medio);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Dormitório Casal Master</h5>
-                    <p class="text-muted mb-4 small">Guarda-roupa com portas de correr em espelho bronze e painel ripado iluminado.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse no Dormitório Casal Master" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Orçamento
-                        </a>
-                    </div>
-                </div>
+        <?php endforeach; else: ?>
+            <div class="col-12 text-center">
+                <p class="text-muted">Nenhum móvel cadastrado no momento.</p>
             </div>
-        </div>
-
-        <!-- Produto 3 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: var(--fundo-creme); height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-tv fa-5x" style="color: var(--logo-claro);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Home Theater Clean</h5>
-                    <p class="text-muted mb-4 small">Painel em MDF amadeirado com rack suspenso em laca branca e fita LED embutida.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse no Home Theater Clean" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Orçamento
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Produto 4 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: #e8dbb4; height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-bath fa-5x" style="color: var(--logo-medio);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Gabinete de Banheiro Luxo</h5>
-                    <p class="text-muted mb-4 small">MDF resistente à umidade, gavetões com corrediças ocultas e sistema fecho-toque.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse no Gabinete de Banheiro Luxo" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Orçamento
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Produto 5 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: var(--fundo-creme); height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-couch fa-5x" style="color: var(--logo-claro);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Painel Divisor de Ambientes</h5>
-                    <p class="text-muted mb-4 small">Estrutura ripada vazada em freijó, ideal para integrar sala de jantar e estar com elegância.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse no Painel Divisor de Ambientes" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Orçamento
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Produto 6 -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: #e8dbb4; height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-briefcase fa-5x" style="color: var(--logo-medio);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Escritório Home Office</h5>
-                    <p class="text-muted mb-4 small">Mesa em L com gaveteiro volante e nichos suspensos para organização eficiente.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse no Escritório Home Office" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Orçamento
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php endif; ?>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const productItems = document.querySelectorAll('.product-item');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active button classes
+            filterBtns.forEach(b => {
+                b.classList.remove('btn-nanias');
+                b.classList.add('btn-outline-nanias');
+            });
+            this.classList.remove('btn-outline-nanias');
+            this.classList.add('btn-nanias');
+
+            const filterValue = this.getAttribute('data-filter');
+
+            productItems.forEach(item => {
+                if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
 
 <style>
 .product-card {

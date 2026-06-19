@@ -2,6 +2,20 @@
 require_once "../config.php";
 require_once DBAPI;
 if (!isset($_SESSION)) session_start();
+
+$database = open_database();
+$produtos = [];
+$categorias = [];
+if ($database) {
+    $stmt_cat = $database->query("SELECT * FROM categorias WHERE tipo = 'materiais' ORDER BY nome ASC");
+    if ($stmt_cat) $categorias = $stmt_cat->fetchAll();
+
+    $stmt_prod = $database->query("SELECT p.*, c.nome as categoria_nome FROM produtos p JOIN categorias c ON p.categoria_id = c.id WHERE c.tipo = 'materiais' AND p.ativo = 1 ORDER BY p.id DESC");
+    if ($stmt_prod) $produtos = $stmt_prod->fetchAll();
+    
+    close_database($database);
+}
+
 include(HEADER_TEMPLATE);
 ?>
 
@@ -15,126 +29,76 @@ include(HEADER_TEMPLATE);
 
     <!-- Filtros do Catálogo (UI/UX) -->
     <div class="row mb-5 slide-up delay-1">
-        <div class="col-12 d-flex justify-content-center flex-wrap gap-2">
-            <button class="btn btn-nanias px-4 rounded-pill">Todos</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">MDF</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">MDP</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">Compensados</button>
-            <button class="btn btn-outline-nanias px-4 rounded-pill">Madeira Maciça</button>
+        <div class="col-12 d-flex justify-content-center flex-wrap gap-2" id="filter-buttons">
+            <button class="btn btn-nanias px-4 rounded-pill filter-btn" data-filter="all">Todos</button>
+            <?php foreach($categorias as $cat): ?>
+                <button class="btn btn-outline-nanias px-4 rounded-pill filter-btn" data-filter="<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['nome']); ?></button>
+            <?php endforeach; ?>
         </div>
     </div>
 
     <!-- Grid de Materiais -->
-    <div class="row g-4 slide-up delay-2">
-        <!-- Material 1 - MDF -->
-        <div class="col-md-6 col-lg-4">
+    <div class="row g-4 slide-up delay-2" id="product-grid">
+        <?php if($produtos): foreach($produtos as $prod): ?>
+        <div class="col-md-6 col-lg-4 product-item" data-category="<?php echo $prod['categoria_id']; ?>">
             <div class="card h-100 border-0 shadow-sm product-card">
                 <div class="product-img-wrapper" style="background-color: var(--fundo-creme); height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-layer-group fa-5x" style="color: var(--logo-claro);"></i>
+                    <?php if(!empty($prod['imagem_url'])): ?>
+                        <img src="<?php echo BASEURL . htmlspecialchars($prod['imagem_url']); ?>" alt="<?php echo htmlspecialchars($prod['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                    <?php else: ?>
+                        <i class="fa-solid fa-layer-group fa-5x" style="color: var(--logo-claro);"></i>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">MDF (Medium Density Fiberboard)</h5>
-                    <p class="text-muted mb-4 small">Placa de fibra de média densidade, ideal para móveis planejados. Superfície uniforme que permite acabamentos em laca, pintura e revestimentos melamínicos de alta qualidade.</p>
+                    <h5 class="fw-bold mb-2 text-dark"><?php echo htmlspecialchars($prod['titulo']); ?></h5>
+                    <div class="mb-3">
+                        <span class="badge" style="background-color: var(--verde-claro); color: var(--header-escuro);"><?php echo htmlspecialchars($prod['categoria_nome']); ?></span>
+                    </div>
+                    <p class="text-muted mb-4 small"><?php echo nl2br(htmlspecialchars($prod['descricao'])); ?></p>
                     <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse em saber mais sobre o material MDF" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Informações
+                        <a href="<?php echo BASEURL; ?>paginas/orcamento.php?produto=<?php echo $prod['id']; ?>" class="btn btn-outline-nanias w-100 rounded-pill">
+                            <i class="fa-solid fa-file-invoice-dollar me-2"></i>Solicitar Informações
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Material 2 - MDP -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: #e8dbb4; height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-cubes fa-5x" style="color: var(--logo-medio);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">MDP (Medium Density Particleboard)</h5>
-                    <p class="text-muted mb-4 small">Placa de partículas de média densidade, amplamente utilizada em móveis residenciais. Excelente custo-benefício com boa resistência estrutural para prateleiras e corpos de armário.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse em saber mais sobre o material MDP" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Informações
-                        </a>
-                    </div>
-                </div>
+        <?php endforeach; else: ?>
+            <div class="col-12 text-center">
+                <p class="text-muted">Nenhum material cadastrado no momento.</p>
             </div>
-        </div>
-
-        <!-- Material 3 - Compensado -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: var(--fundo-creme); height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-layer-group fa-5x fa-flip-horizontal" style="color: var(--logo-claro);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Compensado Naval</h5>
-                    <p class="text-muted mb-4 small">Formado por múltiplas camadas de madeira prensada com resinas especiais. Alta resistência à umidade, perfeito para áreas externas, banheiros e cozinhas que exigem maior durabilidade.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse em saber mais sobre o material Compensado Naval" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Informações
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Material 4 - Madeira Maciça -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: #e8dbb4; height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-tree fa-5x" style="color: var(--logo-medio);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Madeira Maciça (Freijó / Pinus)</h5>
-                    <p class="text-muted mb-4 small">Madeira nobre de reflorestamento, com veios naturais e toque aconchegante. Ideal para peças decorativas, ripados, painéis e móveis rústicos que valorizam a beleza natural da madeira.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse em saber mais sobre Madeira Maciça" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Informações
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Material 5 - Laminado Melamínico -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: var(--fundo-creme); height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-swatchbook fa-5x" style="color: var(--logo-claro);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Laminado Melamínico</h5>
-                    <p class="text-muted mb-4 small">Revestimento de alta resistência aplicado sobre placas de MDF e MDP. Disponível em centenas de cores, texturas e acabamentos — desde madeirados naturais até tons lisos contemporâneos.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse em saber mais sobre Laminado Melamínico" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Informações
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Material 6 - Laca / Acabamento -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm product-card">
-                <div class="product-img-wrapper" style="background-color: #e8dbb4; height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <i class="fa-solid fa-fill-drip fa-5x" style="color: var(--logo-medio);"></i>
-                </div>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-bold mb-2 text-dark">Acabamento em Laca</h5>
-                    <p class="text-muted mb-4 small">Pintura especial em laca brilho ou fosca aplicada sobre MDF. Proporciona superfície lisa e sofisticada com alta durabilidade. Disponível em qualquer cor do catálogo RAL ou NCS.</p>
-                    <div class="mt-auto">
-                        <a href="https://wa.me/seunumerodewhatsapp?text=Olá, tenho interesse em saber mais sobre Acabamento em Laca" class="btn btn-outline-nanias w-100 rounded-pill" target="_blank">
-                            <i class="fa-brands fa-whatsapp me-2"></i>Solicitar Informações
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php endif; ?>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const productItems = document.querySelectorAll('.product-item');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active button classes
+            filterBtns.forEach(b => {
+                b.classList.remove('btn-nanias');
+                b.classList.add('btn-outline-nanias');
+            });
+            this.classList.remove('btn-outline-nanias');
+            this.classList.add('btn-nanias');
+
+            const filterValue = this.getAttribute('data-filter');
+
+            productItems.forEach(item => {
+                if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
 
 <style>
 .product-card {

@@ -1,3 +1,6 @@
+<?php
+if (!isset($_SESSION)) session_start();
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>  
@@ -67,9 +70,61 @@
                             <i class="fa-solid fa-sun icon-sun" style="position: absolute;"></i>
                         </span>
                     </button>
-                    <a href="<?php echo BASEURL; ?>paginas/login.php" class="btn btn-nanias px-4 py-2 rounded-pill">
-                        <i class="fa-solid fa-user me-2"></i>Entrar
-                    </a>
+                    <?php if (isset($_SESSION['logado']) && $_SESSION['logado'] === true): ?>
+                        <?php
+                            $icone = '<i class="fa-solid fa-user me-2"></i>';
+                            if(isset($_SESSION['usuario_rule'])) {
+                                switch($_SESSION['usuario_rule']) {
+                                    case 'admin':
+                                        $icone = '<i class="fa-solid fa-user-tie me-2"></i>';
+                                        break;
+                                    case 'dono':
+                                        $icone = '<i class="fa-solid fa-crown me-2"></i>';
+                                        break;
+                                    case 'funcionario':
+                                        $icone = '<i class="fa-solid fa-user-gear me-2"></i>';
+                                        break;
+                                    case 'cliente':
+                                    default:
+                                        $icone = '<i class="fa-solid fa-circle-user me-2"></i>';
+                                        break;
+                                }
+                            }
+                            $nome_exibicao = isset($_SESSION['usuario_nome']) ? explode(' ', trim($_SESSION['usuario_nome']))[0] : 'Usuário';
+                        ?>
+                        <div class="dropdown">
+                            <button class="btn btn-nanias px-3 py-2 rounded-pill dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border:none;">
+                                <?php echo $icone; ?>
+                                <span class="d-none d-sm-inline fw-semibold"><?php echo htmlspecialchars($nome_exibicao); ?></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="background-color: var(--header-escuro);">
+                                <?php if (in_array($_SESSION['usuario_rule'] ?? '', ['admin', 'dono', 'funcionario'])): ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo BASEURL; ?>gestao/gestao.php" style="color: var(--fundo-creme);">
+                                        <i class="fa-solid fa-chart-line me-2"></i>Painel Gestão
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.1);"></li>
+                                <?php elseif (isset($_SESSION['usuario_rule']) && $_SESSION['usuario_rule'] === 'cliente'): ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo BASEURL; ?>cliente/dashboard.php" style="color: var(--fundo-creme);">
+                                        <i class="fa-solid fa-folder-open me-2"></i>Meus Projetos
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.1);"></li>
+                                <?php endif; ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo BASEURL; ?>paginas/logout.php" style="color: var(--fundo-creme);">
+                                        <i class="fa-solid fa-sign-out-alt me-2"></i>Sair
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    <?php else: ?>
+                        <a href="<?php echo BASEURL; ?>paginas/login.php" class="btn btn-nanias px-4 py-2 rounded-pill d-flex align-items-center">
+                            <i class="fa-solid fa-user me-2"></i><span class="d-none d-sm-inline">Entrar</span>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

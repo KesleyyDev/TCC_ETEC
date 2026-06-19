@@ -2,7 +2,6 @@
 require_once "../config.php";
 require_once DBAPI;
 if (!isset($_SESSION)) session_start();
-include(HEADER_TEMPLATE);
 
 // =============================================
 // SEGURANÇA: Token CSRF
@@ -97,6 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Regenerar token CSRF após o POST
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+include(HEADER_TEMPLATE);
 ?>
 
 <div class="container py-5 fade-in">
