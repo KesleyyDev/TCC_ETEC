@@ -111,7 +111,7 @@ body.dark-mode .text-dark {
 }
 
 body.dark-mode .hero-section {
-    background: linear-gradient(135deg, #75421a 0%, #2a2518 100%);
+    background: linear-gradient(135deg, var(--fundo-creme) 0%, #222222 100%);
 }
 
 body.dark-mode .main-banner {
@@ -509,18 +509,26 @@ body {
 }
 
 .btn-nanias-light {
-    background-color: var(--fundo-creme);
-    color: var(--botao-escuro);
-    border: none;
+    background-color: var(--logo-claro);
+    color: #2f241a;
+    border: 2px solid var(--logo-claro);
     font-weight: 600;
     transition: all 0.3s ease;
 }
 
 .btn-nanias-light:hover {
-    background-color: #ffffff;
-    color: var(--botao-medio);
+    background-color: var(--logo-medio);
+    border-color: var(--logo-medio);
+    color: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-nanias-light:focus-visible {
+    background-color: var(--logo-medio);
+    border-color: var(--logo-medio);
+    color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(166, 138, 100, 0.45);
 }
 
 /* Sections & Layout */
@@ -651,6 +659,24 @@ body {
     background-color: var(--header-escuro);
     background-image: linear-gradient(135deg, var(--header-escuro) 0%, var(--verde-oliva) 100%);
     border-top: 5px solid var(--logo-claro);
+}
+
+/* Ajustes de legibilidade e hierarquia das seções destacadas */
+.home-features .section-title {
+    font-size: 2.2rem;
+}
+
+.home-features-description,
+.home-testimonials-description {
+    font-size: 1.1rem;
+}
+
+.home-cta h2 {
+    color: var(--botao-escuro) !important;
+}
+
+.home-cta p {
+    color: #5f5549 !important;
 }
 
 /* Animações (UX/UI) */
@@ -1316,6 +1342,10 @@ body.acc-reading-guide .acc-reading-line {
     .section-title {
         font-size: 1.75rem;
     }
+
+    .home-features .section-title {
+        font-size: 2rem;
+    }
     
     .stat-number {
         font-size: 2rem;
@@ -1375,5 +1405,31 @@ body.acc-reading-guide .acc-reading-line {
     
     .diff-card {
         padding: 15px;
+    }
+
+    /* Mantém os botões flutuantes fora do texto em telas estreitas, como no S25. */
+    #whatsapp-fab {
+        left: auto;
+        right: 16px;
+        bottom: 84px;
+        width: 52px;
+        height: 52px;
+        font-size: 1.45rem;
+    }
+
+    #accessibility-fab {
+        left: auto;
+        right: 16px;
+        bottom: 18px;
+        width: 52px;
+        height: 52px;
+        font-size: 1.25rem;
+    }
+
+    #accessibility-panel {
+        left: auto;
+        right: 16px;
+        bottom: 78px;
+        width: min(320px, calc(100vw - 32px));
     }
 }

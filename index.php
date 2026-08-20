@@ -39,11 +39,11 @@ include(HEADER_TEMPLATE);
         </div>
     </div>
 
-    <div class="container py-5 slide-up">
+    <div class="container py-5 slide-up home-features">
         <div class="row text-center mb-5 mt-4">
             <div class="col-lg-8 mx-auto">
                 <h2 class="fw-bold mb-3 section-title">Por que escolher a Marcenaria Nanias?</h2>
-                <p class="text-muted">Nossa prioridade é a sua satisfação. Trabalhamos com materiais de alta qualidade para garantir durabilidade e beleza.</p>
+                <p class="text-muted home-features-description">Nossa prioridade é a sua satisfação. Trabalhamos com materiais de alta qualidade para garantir durabilidade e beleza.</p>
             </div>
         </div>
         <div class="row g-4">
@@ -128,11 +128,11 @@ include(HEADER_TEMPLATE);
     <?php endif; ?>
 
     <!-- Depoimentos de Clientes -->
-    <div class="container slide-up mt-5">
+    <div class="container slide-up mt-5 home-testimonials">
         <div class="row mt-5 py-5" style="background-color: var(--fundo-creme); border-radius: 20px;">
             <div class="col-12 text-center mb-4">
                 <h3 class="fw-bold section-title">O Que Nossos Clientes Dizem</h3>
-                <p class="text-muted mt-2">A satisfação de quem confiou na Marcenaria Nanias.</p>
+                <p class="text-muted mt-2 home-testimonials-description">A satisfação de quem confiou na Marcenaria Nanias.</p>
             </div>
             <div class="col-12 px-4">
                 <div class="row g-4">
@@ -176,9 +176,9 @@ include(HEADER_TEMPLATE);
             </div>
         </div>
     </div>
-        <div class="container py-4">
-            <h2 class="fw-bold mb-3 text-white">Pronto para realizar seu projeto?</h2>
-            <p class="mb-4 text-white-50 lead">Fale conosco e agende uma visita técnica para orçamento sem compromisso.</p>
+        <div class="container py-4 home-cta">
+            <h2 class="fw-bold mb-3">Pronto para realizar seu projeto?</h2>
+            <p class="mb-4 lead">Fale conosco e agende uma visita técnica para orçamento sem compromisso.</p>
             <a href="<?php echo BASEURL; ?>paginas/orcamento.php" class="btn btn-nanias-light btn-lg px-5 py-3 rounded-pill">
                 <i class="fa-solid fa-file-invoice-dollar me-2"></i>Solicitar Orçamento
             </a>

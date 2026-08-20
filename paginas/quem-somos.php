@@ -96,24 +96,36 @@ include(HEADER_TEMPLATE);
     <!-- Valores em Cards (Missão, Visão, Valores) -->
     <div class="row g-4 mt-4 slide-up delay-2">
         <div class="col-md-4">
-            <div class="card h-100 border-0 bg-white shadow-sm p-4 text-center about-card">
-                <i class="fa-solid fa-bullseye fa-3x mb-3" style="color: var(--logo-medio);"></i>
-                <h4 class="fw-bold">Missão</h4>
+            <div class="card h-100 border-0 bg-white shadow-sm feature-card about-card">
+                <div class="card-body text-center p-5">
+                    <div class="icon-box mb-4 mx-auto">
+                        <i class="fa-solid fa-bullseye fa-2x" style="color: var(--logo-claro);"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Missão</h4>
                 <p class="text-muted mb-0">Entregar soluções em marcenaria que aliem qualidade, conforto e design exclusivo para cada cliente, transformando espaços em ambientes funcionais e acolhedores.</p>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 border-0 bg-white shadow-sm p-4 text-center about-card">
-                <i class="fa-regular fa-eye fa-3x mb-3" style="color: var(--logo-medio);"></i>
-                <h4 class="fw-bold">Visão</h4>
+            <div class="card h-100 border-0 bg-white shadow-sm feature-card about-card">
+                <div class="card-body text-center p-5">
+                    <div class="icon-box mb-4 mx-auto">
+                        <i class="fa-regular fa-eye fa-2x" style="color: var(--logo-claro);"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Visão</h4>
                 <p class="text-muted mb-0">Ser reconhecida como a melhor marcenaria da região pela excelência no atendimento, pontualidade na entrega e qualidade inquestionável dos nossos produtos.</p>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card h-100 border-0 bg-white shadow-sm p-4 text-center about-card">
-                <i class="fa-solid fa-handshake fa-3x mb-3" style="color: var(--logo-medio);"></i>
-                <h4 class="fw-bold">Valores</h4>
+            <div class="card h-100 border-0 bg-white shadow-sm feature-card about-card">
+                <div class="card-body text-center p-5">
+                    <div class="icon-box mb-4 mx-auto">
+                        <i class="fa-solid fa-handshake fa-2x" style="color: var(--logo-claro);"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Valores</h4>
                 <p class="text-muted mb-0">Comprometimento com a qualidade, transparência em cada etapa do projeto, respeito aos prazos combinados e valorização genuína das relações humanas.</p>
+                </div>
             </div>
         </div>
     </div>
