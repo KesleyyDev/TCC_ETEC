@@ -1,7 +1,10 @@
 <?php
 require_once "../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
+require_once ABSPATH . "inc/auth.php";
+
+$allowed_rules = ['admin', 'dono', 'funcionario'];
+require_roles($allowed_rules);
 
 $database = open_database();
 $kpis = [
@@ -11,32 +14,24 @@ $kpis = [
     'produtos_ativos' => 0
 ];
 
-try {
-    $stmt = $database->query("SELECT COUNT(id) FROM orcamentos WHERE status = 'novo'");
-    if($stmt) $kpis['orcamentos_novos'] = $stmt->fetchColumn();
+if ($database) {
+    try {
+        $stmt = $database->query("SELECT COUNT(id) FROM orcamentos WHERE status = 'novo'");
+        if ($stmt) $kpis['orcamentos_novos'] = (int)$stmt->fetchColumn();
 
-    $stmt = $database->query("SELECT COUNT(id) FROM projetos_cliente WHERE status != 'concluido'");
-    if($stmt) $kpis['projetos_andamento'] = $stmt->fetchColumn();
+        $stmt = $database->query("SELECT COUNT(id) FROM projetos_cliente WHERE status != 'concluido'");
+        if ($stmt) $kpis['projetos_andamento'] = (int)$stmt->fetchColumn();
 
-    $stmt = $database->query("SELECT COUNT(id) FROM usuarios WHERE rule = 'cliente'");
-    if($stmt) $kpis['clientes_total'] = $stmt->fetchColumn();
+        $stmt = $database->query("SELECT COUNT(id) FROM usuarios WHERE rule = 'cliente'");
+        if ($stmt) $kpis['clientes_total'] = (int)$stmt->fetchColumn();
 
-    $stmt = $database->query("SELECT COUNT(id) FROM produtos WHERE ativo = 1");
-    if($stmt) $kpis['produtos_ativos'] = $stmt->fetchColumn();
-} catch(PDOException $e) {}
+        $stmt = $database->query("SELECT COUNT(id) FROM produtos WHERE ativo = 1");
+        if ($stmt) $kpis['produtos_ativos'] = (int)$stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log('Dashboard query error: ' . $e->getMessage());
+    }
+}
 close_database($database);
-
-// Controle de Acesso
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-
-$allowed_rules = ['admin', 'dono', 'funcionario'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
 
 include(HEADER_TEMPLATE);
 ?>
@@ -71,7 +66,7 @@ include(HEADER_TEMPLATE);
             </div>
         </div>
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #F8CCB5, #e0b098); color: var(--header-escuro);">
+            <div class="card border-0 shadow-sm rounded-4 h-100 dashboard-kpi-light dashboard-kpi-clients" style="background: linear-gradient(135deg, #F8CCB5, #e0b098);">
                 <div class="card-body text-center py-4">
                     <h1 class="display-5 fw-bold mb-0"><?php echo $kpis['clientes_total']; ?></h1>
                     <p class="mb-0 mt-2 fw-bold">Clientes Cadastrados</p>
@@ -79,7 +74,7 @@ include(HEADER_TEMPLATE);
             </div>
         </div>
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(135deg, #EBECE8, #dcdedd); color: var(--header-escuro);">
+            <div class="card border-0 shadow-sm rounded-4 h-100 dashboard-kpi-light dashboard-kpi-products" style="background: linear-gradient(135deg, #EBECE8, #dcdedd);">
                 <div class="card-body text-center py-4">
                     <h1 class="display-5 fw-bold mb-0"><?php echo $kpis['produtos_ativos']; ?></h1>
                     <p class="mb-0 mt-2 fw-bold">Produtos Ativos</p>

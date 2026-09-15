@@ -1,14 +1,12 @@
 <?php
 require_once "../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
+require_once ABSPATH . "inc/auth.php";
 
 // =============================================
 // SEGURANÇA: Token CSRF
 // =============================================
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
+csrf_token();
 
 // =============================================
 // LÓGICA DE LOGIN
@@ -19,7 +17,7 @@ $sucesso = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 1. Verificar token CSRF
-    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    if (!valid_csrf_token($_POST['csrf_token'] ?? null)) {
         $erro = 'Erro de segurança. Recarregue a página e tente novamente.';
     } else {
         // 2. Rate limiting básico por sessão
@@ -42,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (empty($erro)) {
             // 3. Sanitizar e validar entradas
-            $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+            $email = trim((string)filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL));
             $senha = $_POST['senha'] ?? '';
 
             if (empty($email) || empty($senha)) {
@@ -56,7 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $pdo = new PDO(DB_DSN, DB_USER, DB_PASS, [
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES => false
                     ]);
 
                     $stmt = $pdo->prepare("SELECT id, nome, email, senha, rule FROM usuarios WHERE email = :email LIMIT 1");
@@ -79,7 +78,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Gerar novo token CSRF após login
                         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
-                        header('Location: ' . BASEURL . 'gestao/gestao.php');
+                        $destination = $usuario['rule'] === 'cliente'
+                            ? BASEURL . 'cliente/dashboard.php'
+                            : BASEURL . 'gestao/gestao.php';
+                        header('Location: ' . $destination);
                         exit;
                     } else {
                         $_SESSION['login_tentativas']++;
@@ -87,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $erro = 'E-mail ou senha incorretos.';
                     }
                 } catch (PDOException $e) {
+                    error_log('Login error: ' . $e->getMessage());
                     $erro = 'Erro ao conectar ao servidor. Tente novamente mais tarde.';
                 }
             }

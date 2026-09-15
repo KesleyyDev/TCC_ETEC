@@ -1,39 +1,39 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-$allowed_rules = ['admin', 'dono', 'funcionario'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 $database = open_database();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = (int)$_GET['id'];
-    $projeto = [
-        'titulo' => $_POST['titulo'],
-        'descricao' => $_POST['descricao'],
-        'status' => $_POST['status']
-    ];
-    update('projetos_cliente', $id, $projeto);
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$projeto = $id > 0 ? find('projetos_cliente', $id) : null;
+if (!$projeto) {
     close_database($database);
-    header("Location: index.php");
+    header('Location: index.php');
     exit;
 }
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$projeto = find('projetos_cliente', $id);
-if (!$projeto) {
-    close_database($database);
-    header("Location: index.php");
-    exit;
+$erro = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
+    $titulo = trim((string)($_POST['titulo'] ?? ''));
+    $descricao = trim((string)($_POST['descricao'] ?? ''));
+    $status = (string)($_POST['status'] ?? '');
+    $allowedStatuses = ['analise', 'fabricacao', 'transporte', 'montagem', 'concluido'];
+
+    if ($titulo === '' || mb_strlen($titulo) > 100 || !in_array($status, $allowedStatuses, true)) {
+        $erro = 'Preencha os dados do projeto corretamente.';
+    } elseif (!update('projetos_cliente', $id, [
+        'titulo' => $titulo,
+        'descricao' => $descricao,
+        'status' => $status
+    ])) {
+        $erro = 'Não foi possível atualizar o projeto.';
+    } else {
+        close_database($database);
+        header('Location: index.php');
+        exit;
+    }
 }
 
 $cliente = find('usuarios', $projeto['cliente_id']);
@@ -51,10 +51,15 @@ include(HEADER_TEMPLATE);
         <hr style="border-color: var(--verde-claro); border-width: 2px;">
     </div>
 
+    <?php if (!empty($erro)): ?>
+        <div class="alert alert-danger"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow-sm border-0 rounded-4 p-4">
-                <form action="edit.php?id=<?php echo $projeto['id']; ?>" method="POST">
+                <form action="edit.php?id=<?php echo (int)$projeto['id']; ?>" method="POST">
+                    <?php echo csrf_field(); ?>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Cliente</label>
                         <input type="text" class="form-control bg-light border-0" value="<?php echo htmlspecialchars($cliente['nome'] . ' (' . $cliente['email'] . ')'); ?>" disabled>

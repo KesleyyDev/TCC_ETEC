@@ -1,11 +1,8 @@
 <?php
 require_once "../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header('Location: ' . BASEURL . 'paginas/login.php');
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono']);
 
 include(HEADER_TEMPLATE);
 ?>

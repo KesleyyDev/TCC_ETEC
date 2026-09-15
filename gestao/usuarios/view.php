@@ -1,16 +1,17 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header('Location: ' . BASEURL . 'paginas/login.php');
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono']);
 
 
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+if (isset($_GET['id']) && (int)$_GET['id'] > 0) {
+    $id = (int)$_GET['id'];
     $usuario = find('usuarios', $id);
+    if (!$usuario) {
+        header('Location: index.php');
+        exit;
+    }
 } else {
     header('Location: index.php');
     exit;
@@ -56,7 +57,11 @@ include(HEADER_TEMPLATE);
         <div class="row mt-4">
             <div class="col-md-12">
                 <a href="edit.php?id=<?php echo $usuario['id']; ?>" class="btn btn-primary">Editar</a>
-                <a href="delete.php?id=<?php echo $usuario['id']; ?>" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
+                <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir?');">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="id" value="<?php echo (int)$usuario['id']; ?>">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
             </div>
         </div>
     </div>

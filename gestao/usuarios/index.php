@@ -1,11 +1,8 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header('Location: ' . BASEURL . 'paginas/login.php');
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono']);
 
 include(HEADER_TEMPLATE);
 
@@ -33,7 +30,7 @@ $usuarios = find_all('usuarios');
         <div class="col-12">
             <?php if (isset($_SESSION['message'])) : ?>
                 <div class="alert alert-<?php echo $_SESSION['type']; ?> alert-dismissible" role="alert">
-                    <?php echo $_SESSION['message']; ?>
+                    <?php echo htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8'); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 <?php unset($_SESSION['message']); unset($_SESSION['type']); ?>
@@ -61,7 +58,11 @@ $usuarios = find_all('usuarios');
                             <td class="text-end">
                                 <a href="view.php?id=<?php echo $usuario['id']; ?>" class="btn btn-sm btn-outline-success" title="Visualizar"><i class="fa-solid fa-eye"></i></a>
                                 <a href="edit.php?id=<?php echo $usuario['id']; ?>" class="btn btn-sm btn-outline-primary" title="Editar"><i class="fa-solid fa-pen"></i></a>
-                                <a href="delete.php?id=<?php echo $usuario['id']; ?>" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir o usuário?');"><i class="fa-solid fa-trash"></i></a>
+                                <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir o usuário?');">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo (int)$usuario['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

@@ -1,28 +1,24 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-
-$allowed_rules = ['admin', 'dono', 'funcionario'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 $database = open_database();
 $projetos = [];
+if ($database) {
 try {
     $sql = "SELECT p.*, u.nome as cliente_nome FROM projetos_cliente p INNER JOIN usuarios u ON p.cliente_id = u.id ORDER BY p.atualizado_em DESC";
     $result = $database->query($sql);
     if ($result) {
         $projetos = $result->fetchAll();
     }
-} catch (PDOException $e) {}
+} catch (PDOException $e) {
+    error_log('Project list error: ' . $e->getMessage());
+}
+} else {
+    error_log('Project list skipped: database unavailable.');
+}
 close_database($database);
 
 include(HEADER_TEMPLATE);
@@ -73,8 +69,12 @@ include(HEADER_TEMPLATE);
                             <td><?php echo date('d/m/Y H:i', strtotime($proj['atualizado_em'])); ?></td>
                             <td class="text-end">
                                 <a href="edit.php?id=<?php echo $proj['id']; ?>" class="btn btn-sm btn-outline-primary" title="Editar"><i class="fa-solid fa-pen"></i></a>
-                                <?php if(in_array($_SESSION['usuario_rule'], ['admin', 'dono'])): ?>
-                                <a href="delete.php?id=<?php echo $proj['id']; ?>" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Excluir projeto?');"><i class="fa-solid fa-trash"></i></a>
+                                <?php if(in_array($_SESSION['usuario_rule'], ['admin', 'dono'], true)): ?>
+                                <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('Excluir projeto?');">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo (int)$proj['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                </form>
                                 <?php endif; ?>
                             </td>
                         </tr>

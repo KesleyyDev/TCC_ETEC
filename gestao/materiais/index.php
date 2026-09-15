@@ -1,24 +1,28 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header('Location: ' . BASEURL . 'paginas/login.php');
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 include(HEADER_TEMPLATE);
 
 $database = open_database();
 $sql = "SELECT p.*, c.nome as categoria_nome FROM produtos p JOIN categorias c ON p.categoria_id = c.id WHERE c.tipo = 'materiais'";
 $produtos = [];
+if ($database) {
 try {
     $result = $database->query($sql);
     if ($result) {
         $produtos = $result->fetchAll();
     }
 } catch (PDOException $e) {
-    $_SESSION['message'] = $e->getMessage();
+    error_log('Material list error: ' . $e->getMessage());
+    $_SESSION['message'] = 'Não foi possível carregar os materiais.';
+    $_SESSION['type'] = 'danger';
+}
+} else {
+    error_log('Material list skipped: database unavailable.');
+    $_SESSION['message'] = 'NÃ£o foi possÃ­vel carregar os materiais.';
     $_SESSION['type'] = 'danger';
 }
 close_database($database);
@@ -45,7 +49,7 @@ close_database($database);
         <div class="col-12">
             <?php if (isset($_SESSION['message'])) : ?>
                 <div class="alert alert-<?php echo $_SESSION['type']; ?> alert-dismissible" role="alert">
-                    <?php echo $_SESSION['message']; ?>
+                    <?php echo htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8'); ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 <?php unset($_SESSION['message']); unset($_SESSION['type']); ?>
@@ -70,8 +74,8 @@ close_database($database);
                         <tr>
                             <td class="fw-bold text-muted">#<?php echo $produto['id']; ?></td>
                             <td>
-                                <?php if($produto['imagem_url']): ?>
-                                    <img src="<?php echo BASEURL . $produto['imagem_url']; ?>" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                                <?php if(!empty($produto['imagem_url']) && local_image_exists($produto['imagem_url'])): ?>
+                                    <img src="<?php echo BASEURL . htmlspecialchars($produto['imagem_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
                                 <?php else: ?>
                                     <div class="rounded-3" style="width: 50px; height: 50px; background-color: var(--fundo-creme); display: flex; align-items: center; justify-content: center;">
                                         <i class="fa-solid fa-image" style="color: var(--logo-claro);"></i>
@@ -85,7 +89,13 @@ close_database($database);
                             <td class="text-end">
                                 <a href="view.php?id=<?php echo $produto['id']; ?>" class="btn btn-sm btn-outline-success" title="Visualizar"><i class="fa-solid fa-eye"></i></a>
                                 <a href="edit.php?id=<?php echo $produto['id']; ?>" class="btn btn-sm btn-outline-primary" title="Editar"><i class="fa-solid fa-pen"></i></a>
-                                <a href="delete.php?id=<?php echo $produto['id']; ?>" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir o material?');"><i class="fa-solid fa-trash"></i></a>
+                                <?php if (in_array($_SESSION['usuario_rule'], ['admin', 'dono'], true)): ?>
+                                <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir o material?');">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo (int)$produto['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

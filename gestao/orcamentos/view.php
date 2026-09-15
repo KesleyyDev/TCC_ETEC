@@ -1,32 +1,34 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-$allowed_rules = ['admin', 'dono', 'funcionario'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 $database = open_database();
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if (!$database) {
+    http_response_code(503);
+    exit('Serviço temporariamente indisponível.');
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
-    $id = (int)$_GET['id'];
-    $status = $_POST['status'];
+    require_csrf();
+    $status = (string)$_POST['status'];
+    $allowedStatuses = ['novo', 'em atendimento', 'fechado'];
+    if (!in_array($status, $allowedStatuses, true)) {
+        http_response_code(422);
+        exit('Status inválido.');
+    }
     try {
         $stmt = $database->prepare("UPDATE orcamentos SET status = :status WHERE id = :id");
         $stmt->execute([':status' => $status, ':id' => $id]);
-    } catch(PDOException $e) {}
+    } catch(PDOException $e) {
+        error_log('Quote status update error: ' . $e->getMessage());
+    }
     header("Location: view.php?id=$id");
     exit;
 }
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $orcamento = null;
 if ($id) {
     try {
@@ -34,7 +36,9 @@ if ($id) {
         $stmt = $database->prepare($sql);
         $stmt->execute([':id' => $id]);
         $orcamento = $stmt->fetch();
-    } catch(PDOException $e) {}
+    } catch(PDOException $e) {
+        error_log('Quote query error: ' . $e->getMessage());
+    }
 }
 close_database($database);
 
@@ -76,7 +80,8 @@ include(HEADER_TEMPLATE);
         <div class="col-md-4">
             <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
                 <h5 class="fw-bold mb-3">Status de Atendimento</h5>
-                <form action="view.php?id=<?php echo $orcamento['id']; ?>" method="POST">
+                <form action="view.php?id=<?php echo (int)$orcamento['id']; ?>" method="POST">
+                    <?php echo csrf_field(); ?>
                     <select name="status" class="form-select mb-3" onchange="this.form.submit()">
                         <option value="novo" <?php if($orcamento['status'] == 'novo') echo 'selected'; ?>>Novo</option>
                         <option value="em atendimento" <?php if($orcamento['status'] == 'em atendimento') echo 'selected'; ?>>Em Atendimento</option>
@@ -88,8 +93,8 @@ include(HEADER_TEMPLATE);
             <?php if($orcamento['produto_id']): ?>
             <div class="card shadow-sm border-0 rounded-4 p-4">
                 <h5 class="fw-bold mb-3">Produto Relacionado</h5>
-                <?php if($orcamento['produto_imagem']): ?>
-                    <img src="<?php echo BASEURL . $orcamento['produto_imagem']; ?>" class="img-fluid rounded mb-2">
+                <?php if(!empty($orcamento['produto_imagem']) && local_image_exists($orcamento['produto_imagem'])): ?>
+                    <img src="<?php echo BASEURL . htmlspecialchars($orcamento['produto_imagem'], ENT_QUOTES, 'UTF-8'); ?>" class="img-fluid rounded mb-2">
                 <?php endif; ?>
                 <p class="mb-0 fw-bold text-center"><?php echo htmlspecialchars($orcamento['produto_titulo']); ?></p>
             </div>

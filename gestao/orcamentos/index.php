@@ -1,28 +1,24 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-
-$allowed_rules = ['admin', 'dono', 'funcionario'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 $database = open_database();
 $orcamentos = [];
+if ($database) {
 try {
     $sql = "SELECT o.*, p.titulo as produto_titulo FROM orcamentos o LEFT JOIN produtos p ON o.produto_id = p.id ORDER BY o.data_envio DESC";
     $result = $database->query($sql);
     if ($result) {
         $orcamentos = $result->fetchAll();
     }
-} catch (PDOException $e) {}
+} catch (PDOException $e) {
+    error_log('Quote list error: ' . $e->getMessage());
+}
+} else {
+    error_log('Quote list skipped: database unavailable.');
+}
 close_database($database);
 
 include(HEADER_TEMPLATE);
@@ -75,8 +71,12 @@ include(HEADER_TEMPLATE);
                             </td>
                             <td class="text-end">
                                 <a href="view.php?id=<?php echo $orc['id']; ?>" class="btn btn-sm btn-outline-success" title="Visualizar"><i class="fa-solid fa-eye"></i></a>
-                                <?php if(in_array($_SESSION['usuario_rule'], ['admin', 'dono'])): ?>
-                                <a href="delete.php?id=<?php echo $orc['id']; ?>" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Excluir orçamento?');"><i class="fa-solid fa-trash"></i></a>
+                                <?php if(in_array($_SESSION['usuario_rule'], ['admin', 'dono'], true)): ?>
+                                <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('Excluir orçamento?');">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo (int)$orc['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                </form>
                                 <?php endif; ?>
                             </td>
                         </tr>

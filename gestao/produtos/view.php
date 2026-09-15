@@ -1,27 +1,30 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header('Location: ' . BASEURL . 'paginas/login.php');
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 
 if (isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = (int)$_GET['id'];
     $produto = find('produtos', $id);
+    if (!$produto) {
+        header('Location: index.php');
+        exit;
+    }
     
     // Fetch category name
     $database = open_database();
     $cat_nome = 'Desconhecida';
-    if ($produto && isset($produto['categoria_id'])) {
+    if ($produto && isset($produto['categoria_id']) && $database) {
         try {
             $stmt = $database->prepare("SELECT nome FROM categorias WHERE id = :id");
             $stmt->execute([':id' => $produto['categoria_id']]);
             $cat = $stmt->fetch();
             if ($cat) $cat_nome = $cat['nome'];
-        } catch (PDOException $e) {}
+        } catch (PDOException $e) {
+            error_log('Category query error: ' . $e->getMessage());
+        }
     }
     close_database($database);
 } else {
@@ -45,8 +48,8 @@ include(HEADER_TEMPLATE);
     <div class="card shadow-sm border-0 rounded-4 p-4">
         <div class="row">
             <div class="col-md-4 text-center mb-4">
-                <?php if($produto['imagem_url']): ?>
-                    <img src="<?php echo BASEURL . $produto['imagem_url']; ?>" alt="" style="max-width: 100%; border-radius: 8px;">
+                <?php if(!empty($produto['imagem_url']) && local_image_exists($produto['imagem_url'])): ?>
+                    <img src="<?php echo BASEURL . htmlspecialchars($produto['imagem_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="" style="max-width: 100%; border-radius: 8px;">
                 <?php else: ?>
                     <div class="rounded-3" style="width: 100%; height: 200px; background-color: var(--fundo-creme); display: flex; align-items: center; justify-content: center;">
                         <i class="fa-solid fa-image fa-4x" style="color: var(--logo-claro);"></i>
@@ -82,7 +85,13 @@ include(HEADER_TEMPLATE);
         <div class="row mt-4">
             <div class="col-md-12">
                 <a href="edit.php?id=<?php echo $produto['id']; ?>" class="btn btn-primary">Editar</a>
-                <a href="delete.php?id=<?php echo $produto['id']; ?>" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
+                <?php if (in_array($_SESSION['usuario_rule'], ['admin', 'dono'], true)): ?>
+                <form action="delete.php" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir?');">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="id" value="<?php echo (int)$produto['id']; ?>">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+                <?php endif; ?>
             </div>
         </div>
     </div>

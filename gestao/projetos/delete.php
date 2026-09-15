@@ -1,26 +1,18 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono']);
 
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    exit('Método não permitido.');
 }
+require_csrf();
 
-$allowed_rules = ['admin', 'dono'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
-
-if (isset($_GET['id'])) {
-    $database = open_database();
-    try {
-        $stmt = $database->prepare("DELETE FROM projetos_cliente WHERE id = :id");
-        $stmt->execute([':id' => (int)$_GET['id']]);
-    } catch(PDOException $e) {}
-    close_database($database);
+$id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+if ($id) {
+    remove('projetos_cliente', $id);
 }
 header("Location: index.php");
 exit;

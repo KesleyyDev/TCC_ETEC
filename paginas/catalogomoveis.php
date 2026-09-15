@@ -6,6 +6,8 @@ if (!isset($_SESSION)) session_start();
 $database = open_database();
 $produtos = [];
 $categorias = [];
+$galerias = [];
+$erro = '';
 $categoria_filtro = isset($_GET['cat']) ? (int)$_GET['cat'] : null;
 
 if ($database) {
@@ -28,7 +30,6 @@ if ($database) {
         $produtos = $stmt->fetchAll();
 
         // Buscar imagens da galeria para todos os produtos
-        $galerias = [];
         $stmt_img = $database->query("SELECT produto_id, imagem_url FROM imagens_produto");
         if($stmt_img) {
             $imagens = $stmt_img->fetchAll();
@@ -37,9 +38,12 @@ if ($database) {
             }
         }
     } catch (PDOException $e) {
-        die("Erro ao buscar dados: " . $e->getMessage());
+        error_log('Furniture catalog query error: ' . $e->getMessage());
+        $erro = 'O catálogo está temporariamente indisponível.';
     }
     close_database($database);
+} else {
+    $erro = 'O catálogo está temporariamente indisponível.';
 }
 
 include(HEADER_TEMPLATE);
@@ -53,12 +57,16 @@ include(HEADER_TEMPLATE);
         </div>
     </div>
 
+    <?php if (!empty($erro)): ?>
+        <div class="alert alert-warning text-center"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+
     <!-- Filtros do Catálogo (UI/UX) -->
     <div class="row mb-5 slide-up delay-1">
         <div class="col-12 d-flex justify-content-center flex-wrap gap-2" id="filter-buttons">
-            <a href="catalogo.php" class="btn <?php echo !$categoria_filtro ? 'btn-nanias' : 'btn-outline-nanias'; ?> px-4 rounded-pill">Todos</a>
+            <a href="catalogomoveis.php" class="btn <?php echo !$categoria_filtro ? 'btn-nanias' : 'btn-outline-nanias'; ?> px-4 rounded-pill">Todos</a>
             <?php foreach($categorias as $cat): ?>
-                <a href="catalogo.php?cat=<?php echo $cat['id']; ?>" class="btn <?php echo ($categoria_filtro == $cat['id']) ? 'btn-nanias' : 'btn-outline-nanias'; ?> px-4 rounded-pill"><?php echo htmlspecialchars($cat['nome']); ?></a>
+                <a href="catalogomoveis.php?cat=<?php echo (int)$cat['id']; ?>" class="btn <?php echo ($categoria_filtro == $cat['id']) ? 'btn-nanias' : 'btn-outline-nanias'; ?> px-4 rounded-pill"><?php echo htmlspecialchars($cat['nome'], ENT_QUOTES, 'UTF-8'); ?></a>
             <?php endforeach; ?>
         </div>
     </div>
@@ -67,9 +75,15 @@ include(HEADER_TEMPLATE);
     <div class="row g-4 slide-up delay-2" id="product-grid">
         <?php if($produtos): foreach($produtos as $prod): 
             $imagens_carrossel = [];
-            if (!empty($prod['imagem_url'])) $imagens_carrossel[] = $prod['imagem_url'];
+            if (!empty($prod['imagem_url']) && local_image_exists($prod['imagem_url'])) {
+                $imagens_carrossel[] = $prod['imagem_url'];
+            }
             if (isset($galerias[$prod['id']])) {
-                $imagens_carrossel = array_merge($imagens_carrossel, $galerias[$prod['id']]);
+                foreach ($galerias[$prod['id']] as $galleryImage) {
+                    if (local_image_exists($galleryImage)) {
+                        $imagens_carrossel[] = $galleryImage;
+                    }
+                }
             }
             $carrossel_id = "carousel_prod_" . $prod['id'];
         ?>
@@ -81,7 +95,7 @@ include(HEADER_TEMPLATE);
                             <div class="carousel-inner" style="height: 100%;">
                                 <?php foreach($imagens_carrossel as $index => $img_url): ?>
                                 <div class="carousel-item <?php echo $index === 0 ? 'active' : ''; ?>" style="height: 100%;">
-                                    <img src="<?php echo BASEURL . htmlspecialchars($img_url); ?>" class="d-block w-100" style="height: 100%; object-fit: cover;" alt="<?php echo htmlspecialchars($prod['titulo']); ?>">
+                                    <img src="<?php echo BASEURL . htmlspecialchars($img_url, ENT_QUOTES, 'UTF-8'); ?>" class="d-block w-100" style="height: 100%; object-fit: cover;" alt="<?php echo htmlspecialchars($prod['titulo'], ENT_QUOTES, 'UTF-8'); ?>">
                                 </div>
                                 <?php endforeach; ?>
                             </div>
@@ -92,8 +106,8 @@ include(HEADER_TEMPLATE);
                                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                             </button>
                         </div>
-                    <?php elseif(!empty($prod['imagem_url'])): ?>
-                        <img src="<?php echo BASEURL . htmlspecialchars($prod['imagem_url']); ?>" alt="<?php echo htmlspecialchars($prod['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                    <?php elseif(!empty($prod['imagem_url']) && local_image_exists($prod['imagem_url'])): ?>
+                        <img src="<?php echo BASEURL . htmlspecialchars($prod['imagem_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($prod['titulo'], ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                     <?php else: ?>
                         <i class="fa-solid fa-couch fa-5x" style="color: var(--logo-claro);"></i>
                     <?php endif; ?>

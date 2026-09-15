@@ -1,28 +1,21 @@
 <?php
 require_once "../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-
-// Controle de Acesso
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-
-$allowed_rules = ['admin', 'dono'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono']);
 
 // Busca os usuários para listar
-$pdo = new PDO(DB_DSN, DB_USER, DB_PASS, [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-]);
-
-$stmt = $pdo->query("SELECT * FROM usuarios ORDER BY id ASC");
-$usuarios = $stmt->fetchAll();
+$pdo = open_database();
+$usuarios = [];
+if ($pdo) {
+    try {
+        $stmt = $pdo->query("SELECT * FROM usuarios ORDER BY id ASC");
+        $usuarios = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log('User list error: ' . $e->getMessage());
+    }
+    close_database($pdo);
+}
 
 include(HEADER_TEMPLATE);
 ?>
@@ -67,12 +60,12 @@ include(HEADER_TEMPLATE);
             <i class="fa-solid fa-users me-2" style="color: var(--verde-claro);"></i> Usuários
         </h2>
         <div class="d-flex flex-wrap gap-2">
-            <a href="#" class="btn btn-sm d-flex align-items-center" style="background-color: var(--verde-oliva); color: white;">
+            <a href="../gestao/usuarios/add.php" class="btn btn-sm d-flex align-items-center" style="background-color: var(--verde-oliva); color: white;">
                 <i class="fa-solid fa-plus me-2"></i> Novo Usuário
             </a>
-            <a href="#" class="btn btn-sm btn-outline-light d-flex align-items-center">
+            <button type="button" class="btn btn-sm btn-outline-light d-flex align-items-center" disabled title="PDF nÃ£o configurado">
                 <i class="fa-solid fa-file-pdf me-2"></i> PDF Geral
-            </a>
+            </button>
             <a href="cadastro_usuarios.php" class="btn btn-sm btn-light text-dark d-flex align-items-center">
                 <i class="fa-solid fa-rotate-right me-2"></i> Atualizar
             </a>
@@ -125,15 +118,19 @@ include(HEADER_TEMPLATE);
                             </td>
                             <td><?php echo date('d/m/Y', strtotime($user['criado_em'])); ?></td>
                             <td class="text-center">
-                                <a href="#" class="btn btn-sm btn-light" title="Visualizar">
+                                <a href="../gestao/usuarios/view.php?id=<?php echo (int)$user['id']; ?>" class="btn btn-sm btn-light" title="Visualizar">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
-                                <a href="#" class="btn btn-sm btn-secondary mx-1" style="background-color: #555; border:none;" title="Editar">
+                                <a href="../gestao/usuarios/edit.php?id=<?php echo (int)$user['id']; ?>" class="btn btn-sm btn-secondary mx-1" style="background-color: #555; border:none;" title="Editar">
                                     <i class="fa-solid fa-pen"></i>
                                 </a>
-                                <a href="#" class="btn btn-sm btn-danger" style="background-color: var(--botao-escuro); border:none;" title="Excluir">
-                                    <i class="fa-solid fa-trash"></i>
-                                </a>
+                                <form action="../gestao/usuarios/delete.php" method="POST" class="d-inline" onsubmit="return confirm('Excluir este usuÃ¡rio?');">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="<?php echo (int)$user['id']; ?>">
+                                    <button type="submit" class="btn btn-sm btn-danger" style="background-color: var(--botao-escuro); border:none;" title="Excluir">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

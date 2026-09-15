@@ -1,0 +1,28 @@
+# Configurações e segredos
+.env
+.env.*
+!.env.example
+config.local.php
+
+# Dump local do banco com dados e hashes de usuários
+/bd.sql
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+temp/
+logs/
+
+# Uploads gerados pelo sistema
+img/produtos/*
+!img/produtos/.gitkeep
+
+# IDE e sistema operacional
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Backups
+*.bak
+*.backup

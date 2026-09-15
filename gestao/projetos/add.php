@@ -1,36 +1,66 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-$allowed_rules = ['admin', 'dono', 'funcionario'];
-if (!isset($_SESSION['usuario_rule']) || !in_array($_SESSION['usuario_rule'], $allowed_rules)) {
-    header("Location: " . BASEURL . "index.php?erro=acesso_negado");
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 $database = open_database();
 $clientes = [];
 try {
+    if (!$database) {
+        throw new RuntimeException('Banco indisponível.');
+    }
     $stmt = $database->query("SELECT id, nome, email FROM usuarios WHERE rule = 'cliente' ORDER BY nome ASC");
-    if($stmt) $clientes = $stmt->fetchAll();
-} catch (PDOException $e) {}
+    if ($stmt) $clientes = $stmt->fetchAll();
+} catch (Throwable $e) {
+    error_log('Client list error: ' . $e->getMessage());
+}
 
+$erro = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $projeto = [
-        'cliente_id' => $_POST['cliente_id'],
-        'titulo' => $_POST['titulo'],
-        'descricao' => $_POST['descricao'],
-        'status' => $_POST['status']
-    ];
-    save('projetos_cliente', $projeto);
-    close_database($database);
-    header("Location: index.php");
-    exit;
+    require_csrf();
+    $clienteId = (int)($_POST['cliente_id'] ?? 0);
+    $titulo = trim((string)($_POST['titulo'] ?? ''));
+    $descricao = trim((string)($_POST['descricao'] ?? ''));
+    $status = (string)($_POST['status'] ?? 'analise');
+    $allowedStatuses = ['analise', 'fabricacao', 'transporte', 'montagem', 'concluido'];
+
+    try {
+        if (!$database) {
+            throw new RuntimeException('Banco indisponível.');
+        }
+        if ($clienteId <= 0 || $titulo === '' || mb_strlen($titulo) > 100 ||
+            !in_array($status, $allowedStatuses, true)) {
+            throw new InvalidArgumentException('Preencha os dados do projeto corretamente.');
+        }
+
+        $clientStmt = $database->prepare(
+            "SELECT id FROM usuarios WHERE id = :id AND rule = 'cliente'"
+        );
+        $clientStmt->execute([':id' => $clienteId]);
+        if (!$clientStmt->fetch()) {
+            throw new InvalidArgumentException('Cliente inválido.');
+        }
+
+        $saved = save('projetos_cliente', [
+            'cliente_id' => $clienteId,
+            'titulo' => $titulo,
+            'descricao' => $descricao,
+            'status' => $status
+        ]);
+        if (!$saved) {
+            throw new RuntimeException('Não foi possível salvar o projeto.');
+        }
+
+        close_database($database);
+        header('Location: index.php');
+        exit;
+    } catch (Throwable $e) {
+        error_log('Project insert error: ' . $e->getMessage());
+        $erro = $e instanceof InvalidArgumentException
+            ? $e->getMessage()
+            : 'Não foi possível cadastrar o projeto.';
+    }
 }
 close_database($database);
 
@@ -46,10 +76,15 @@ include(HEADER_TEMPLATE);
         <hr style="border-color: var(--verde-claro); border-width: 2px;">
     </div>
 
+    <?php if (!empty($erro)): ?>
+        <div class="alert alert-danger"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow-sm border-0 rounded-4 p-4">
                 <form action="add.php" method="POST">
+                    <?php echo csrf_field(); ?>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
                         <select name="cliente_id" class="form-select bg-light border-0" required>

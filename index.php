@@ -9,7 +9,9 @@ if ($database) {
     try {
         $stmt = $database->query("SELECT p.*, c.nome as categoria_nome FROM produtos p LEFT JOIN categorias c ON p.categoria_id = c.id WHERE p.ativo = 1 AND p.destaque = 1 AND c.tipo = 'moveis' ORDER BY p.id DESC LIMIT 6");
         if ($stmt) $destaques = $stmt->fetchAll();
-    } catch(PDOException $e) {}
+    } catch (PDOException $e) {
+        error_log('Home highlights query error: ' . $e->getMessage());
+    }
     close_database($database);
 }
 
@@ -96,7 +98,7 @@ include(HEADER_TEMPLATE);
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 border-0 shadow-sm product-card" style="border-radius: 12px; transition: transform 0.3s;">
                     <div style="height: 250px; overflow: hidden; border-radius: 12px 12px 0 0;">
-                        <?php if($prod['imagem_url']): ?>
+                        <?php if(!empty($prod['imagem_url']) && local_image_exists($prod['imagem_url'])): ?>
                             <img src="<?php echo BASEURL . htmlspecialchars($prod['imagem_url']); ?>" alt="<?php echo htmlspecialchars($prod['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
                             <div class="w-100 h-100 d-flex align-items-center justify-content-center" style="background: var(--fundo-creme);">

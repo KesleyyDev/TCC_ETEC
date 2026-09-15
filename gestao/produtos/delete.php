@@ -1,15 +1,18 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header('Location: ' . BASEURL . 'paginas/login.php');
-    exit;
+require_once ABSPATH . "inc/auth.php";
+require_roles(['admin', 'dono']);
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    exit('Método não permitido.');
 }
+require_csrf();
 
-
-if (isset($_GET['id'])) {
-    remove('produtos', $_GET['id']);
+$id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+if ($id) {
+    remove('produtos', $id);
 }
 header('Location: index.php');
 exit;

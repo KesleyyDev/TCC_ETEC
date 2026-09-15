@@ -1,14 +1,10 @@
 <?php
 require_once "../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
+require_once ABSPATH . "inc/auth.php";
+require_login();
 
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: " . BASEURL . "paginas/login.php");
-    exit;
-}
-
-if ($_SESSION['usuario_rule'] !== 'cliente') {
+if (($_SESSION['usuario_rule'] ?? null) !== 'cliente') {
     // Se for admin/dono/funcionario, vai para a gestão
     header("Location: " . BASEURL . "gestao/gestao.php");
     exit;
@@ -17,10 +13,15 @@ if ($_SESSION['usuario_rule'] !== 'cliente') {
 $database = open_database();
 $projetos = [];
 try {
+    if (!$database) {
+        throw new RuntimeException('Banco indisponível.');
+    }
     $stmt = $database->prepare("SELECT * FROM projetos_cliente WHERE cliente_id = :cliente_id ORDER BY atualizado_em DESC");
-    $stmt->execute([':cliente_id' => $_SESSION['usuario_id']]);
+    $stmt->execute([':cliente_id' => (int)$_SESSION['usuario_id']]);
     $projetos = $stmt->fetchAll();
-} catch (PDOException $e) {}
+} catch (Throwable $e) {
+    error_log('Client dashboard query error: ' . $e->getMessage());
+}
 close_database($database);
 
 include(HEADER_TEMPLATE);

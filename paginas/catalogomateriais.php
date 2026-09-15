@@ -6,14 +6,21 @@ if (!isset($_SESSION)) session_start();
 $database = open_database();
 $produtos = [];
 $categorias = [];
+$erro = '';
 if ($database) {
-    $stmt_cat = $database->query("SELECT * FROM categorias WHERE tipo = 'materiais' ORDER BY nome ASC");
-    if ($stmt_cat) $categorias = $stmt_cat->fetchAll();
+    try {
+        $stmt_cat = $database->query("SELECT * FROM categorias WHERE tipo = 'materiais' ORDER BY nome ASC");
+        if ($stmt_cat) $categorias = $stmt_cat->fetchAll();
 
-    $stmt_prod = $database->query("SELECT p.*, c.nome as categoria_nome FROM produtos p JOIN categorias c ON p.categoria_id = c.id WHERE c.tipo = 'materiais' AND p.ativo = 1 ORDER BY p.id DESC");
-    if ($stmt_prod) $produtos = $stmt_prod->fetchAll();
-    
+        $stmt_prod = $database->query("SELECT p.*, c.nome as categoria_nome FROM produtos p JOIN categorias c ON p.categoria_id = c.id WHERE c.tipo = 'materiais' AND p.ativo = 1 ORDER BY p.id DESC");
+        if ($stmt_prod) $produtos = $stmt_prod->fetchAll();
+    } catch (PDOException $e) {
+        error_log('Materials catalog query error: ' . $e->getMessage());
+        $erro = 'O catálogo está temporariamente indisponível.';
+    }
     close_database($database);
+} else {
+    $erro = 'O catálogo está temporariamente indisponível.';
 }
 
 include(HEADER_TEMPLATE);
@@ -26,6 +33,10 @@ include(HEADER_TEMPLATE);
             <p class="lead text-muted max-w-700 mx-auto">Conheça os materiais que utilizamos em nossos projetos. Cada tipo de madeira e acabamento é selecionado com rigor para garantir durabilidade, beleza e funcionalidade ao seu ambiente.</p>
         </div>
     </div>
+
+    <?php if (!empty($erro)): ?>
+        <div class="alert alert-warning text-center"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
 
     <!-- Filtros do Catálogo (UI/UX) -->
     <div class="row mb-5 slide-up delay-1">
@@ -43,8 +54,8 @@ include(HEADER_TEMPLATE);
         <div class="col-md-6 col-lg-4 product-item" data-category="<?php echo $prod['categoria_id']; ?>">
             <div class="card h-100 border-0 shadow-sm product-card">
                 <div class="product-img-wrapper" style="background-color: var(--fundo-creme); height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 12px 12px 0 0;">
-                    <?php if(!empty($prod['imagem_url'])): ?>
-                        <img src="<?php echo BASEURL . htmlspecialchars($prod['imagem_url']); ?>" alt="<?php echo htmlspecialchars($prod['titulo']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                    <?php if(!empty($prod['imagem_url']) && local_image_exists($prod['imagem_url'])): ?>
+                        <img src="<?php echo BASEURL . htmlspecialchars($prod['imagem_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($prod['titulo'], ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                     <?php else: ?>
                         <i class="fa-solid fa-layer-group fa-5x" style="color: var(--logo-claro);"></i>
                     <?php endif; ?>

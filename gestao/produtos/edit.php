@@ -1,61 +1,125 @@
 <?php
 require_once "../../config.php";
 require_once DBAPI;
-if (!isset($_SESSION)) session_start();
-if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header('Location: ' . BASEURL . 'paginas/login.php');
-    exit;
-}
+require_once ABSPATH . "inc/auth.php";
+require_once ABSPATH . "inc/uploads.php";
+require_roles(['admin', 'dono', 'funcionario']);
 
 $database = open_database();
 $categorias = [];
+if ($database) {
 try {
     $stmt = $database->query("SELECT id, nome FROM categorias WHERE tipo = 'moveis'");
     if($stmt) $categorias = $stmt->fetchAll();
-} catch (PDOException $e) {}
+} catch (PDOException $e) {
+    error_log('Category query error: ' . $e->getMessage());
+}
+} else {
+    error_log('Category query skipped: database unavailable.');
+}
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $produto = find('produtos', $id);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $produto_update = $_POST['produto'];
-    $upload_dir = ABSPATH . 'img/produtos/';
-    if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
-
-    // Upload da imagem principal (se houver)
-    if (isset($_FILES['imagem_principal']) && $_FILES['imagem_principal']['error'] === UPLOAD_ERR_OK) {
-        $ext = pathinfo($_FILES['imagem_principal']['name'], PATHINFO_EXTENSION);
-        $filename = uniqid('prod_') . '.' . $ext;
-        if (move_uploaded_file($_FILES['imagem_principal']['tmp_name'], $upload_dir . $filename)) {
-            $produto_update['imagem_url'] = 'img/produtos/' . $filename;
-        }
-    } else {
-        $produto_update['imagem_url'] = $produto['imagem_url']; // Mantém a existente
-    }
-
-    try {
-        update('produtos', $id, $produto_update);
-
-        // Upload das imagens da galeria (adiciona novas)
-        if (isset($_FILES['galeria'])) {
-            $total = count($_FILES['galeria']['name']);
-            for ($i = 0; $i < $total; $i++) {
-                if ($_FILES['galeria']['error'][$i] === UPLOAD_ERR_OK) {
-                    $ext = pathinfo($_FILES['galeria']['name'][$i], PATHINFO_EXTENSION);
-                    $filename = uniqid('gal_') . '_' . $i . '.' . $ext;
-                    if (move_uploaded_file($_FILES['galeria']['tmp_name'][$i], $upload_dir . $filename)) {
-                        $gal_url = 'img/produtos/' . $filename;
-                        $database->prepare("INSERT INTO imagens_produto (produto_id, imagem_url) VALUES (?, ?)")
-                                 ->execute([$id, $gal_url]);
-                    }
-                }
-            }
-        }
-    } catch (PDOException $e) {}
-
+if (!$produto) {
     close_database($database);
     header('Location: index.php');
     exit;
+}
+
+$erro = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
+    $input = is_array($_POST['produto'] ?? null) ? $_POST['produto'] : [];
+    $titulo = trim((string)($input['titulo'] ?? ''));
+    $descricao = trim((string)($input['descricao'] ?? ''));
+    $categoriaId = (int)($input['categoria_id'] ?? 0);
+    $destaque = (int)($input['destaque'] ?? 0);
+    $ativo = (int)($input['ativo'] ?? 1);
+
+    if ($titulo === '' || mb_strlen($titulo) > 100 || $descricao === '') {
+        $erro = 'Preencha um título e uma descrição válidos.';
+    } elseif (!in_array($destaque, [0, 1], true) || !in_array($ativo, [0, 1], true)) {
+        $erro = 'Status do produto inválido.';
+    } elseif ($categoriaId <= 0) {
+        $erro = 'Selecione uma categoria válida.';
+    }
+
+    $uploadedFiles = [];
+    try {
+        if ($erro !== '') {
+            throw new InvalidArgumentException($erro);
+        }
+        if (!$database) {
+            throw new RuntimeException('Banco indisponível.');
+        }
+
+        $categoryStmt = $database->prepare(
+            "SELECT id FROM categorias WHERE id = :id AND tipo = 'moveis'"
+        );
+        $categoryStmt->execute([':id' => $categoriaId]);
+        if (!$categoryStmt->fetch()) {
+            throw new InvalidArgumentException('Categoria de móvel inválida.');
+        }
+
+        $mainImage = store_image_upload($_FILES['imagem_principal'] ?? null, 'prod_');
+        if ($mainImage !== null) {
+            $uploadedFiles[] = $mainImage;
+        } else {
+            $mainImage = $produto['imagem_url'];
+        }
+        $galleryImages = store_multiple_image_uploads($_FILES['galeria'] ?? null, 'gal_');
+        $uploadedFiles = array_merge($uploadedFiles, $galleryImages);
+
+        $database->beginTransaction();
+        $stmt = $database->prepare(
+            'UPDATE produtos SET titulo = :titulo, descricao = :descricao, imagem_url = :imagem_url, '
+            . 'categoria_id = :categoria_id, destaque = :destaque, ativo = :ativo WHERE id = :id'
+        );
+        $stmt->execute([
+            ':titulo' => $titulo,
+            ':descricao' => $descricao,
+            ':imagem_url' => $mainImage,
+            ':categoria_id' => $categoriaId,
+            ':destaque' => $destaque,
+            ':ativo' => $ativo,
+            ':id' => $id
+        ]);
+
+        if ($galleryImages) {
+            $galleryStmt = $database->prepare(
+                'INSERT INTO imagens_produto (produto_id, imagem_url) VALUES (:produto_id, :imagem_url)'
+            );
+            foreach ($galleryImages as $galleryImage) {
+                $galleryStmt->execute([
+                    ':produto_id' => $id,
+                    ':imagem_url' => $galleryImage
+                ]);
+            }
+        }
+
+        $database->commit();
+        $_SESSION['message'] = 'Produto atualizado com sucesso.';
+        $_SESSION['type'] = 'success';
+        close_database($database);
+        header('Location: index.php');
+        exit;
+    } catch (Throwable $e) {
+        if ($database && $database->inTransaction()) {
+            $database->rollBack();
+        }
+        foreach ($uploadedFiles as $uploadedFile) {
+            $absoluteFile = ABSPATH . str_replace('/', DIRECTORY_SEPARATOR, $uploadedFile);
+            if (is_file($absoluteFile)) {
+                unlink($absoluteFile);
+            }
+        }
+        error_log('Product update error: ' . $e->getMessage());
+        if ($erro === '') {
+            $erro = $e instanceof InvalidArgumentException
+                ? $e->getMessage()
+                : 'Não foi possível atualizar o produto.';
+        }
+    }
 }
 
 // Buscar imagens da galeria atual
@@ -64,7 +128,9 @@ try {
     $stmt = $database->prepare("SELECT * FROM imagens_produto WHERE produto_id = ?");
     $stmt->execute([$id]);
     $galeria = $stmt->fetchAll();
-} catch(PDOException $e) {}
+} catch(PDOException $e) {
+    error_log('Gallery query error: ' . $e->getMessage());
+}
 
 close_database($database);
 include(HEADER_TEMPLATE);
@@ -75,7 +141,11 @@ include(HEADER_TEMPLATE);
             <h2 class="fw-bold" style="color: var(--logo-escuro);">Editar Produto #<?php echo $produto['id']; ?></h2>
         </div>
     </div>
+    <?php if (!empty($erro)): ?>
+        <div class="alert alert-danger"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
     <form action="edit.php?id=<?php echo $produto['id']; ?>" method="POST" enctype="multipart/form-data" class="shadow-sm rounded-4 bg-white p-4">
+        <?php echo csrf_field(); ?>
         <div class="row">
             <div class="form-group col-md-6 mb-3">
                 <label for="titulo" class="fw-bold">Título <span class="text-danger">*</span></label>
@@ -97,9 +167,9 @@ include(HEADER_TEMPLATE);
             <div class="form-group col-md-6 mb-3">
                 <label for="imagem_principal" class="fw-bold">Alterar Imagem Principal (Capa)</label>
                 <input type="file" class="form-control" name="imagem_principal" accept="image/*">
-                <?php if($produto['imagem_url']): ?>
+                <?php if(!empty($produto['imagem_url']) && local_image_exists($produto['imagem_url'])): ?>
                     <div class="mt-2">
-                        <img src="<?php echo BASEURL . $produto['imagem_url']; ?>" alt="Atual" style="height: 60px; border-radius: 8px;">
+                    <img src="<?php echo BASEURL . htmlspecialchars($produto['imagem_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="Atual" style="height: 60px; border-radius: 8px;">
                     </div>
                 <?php endif; ?>
             </div>
@@ -109,7 +179,9 @@ include(HEADER_TEMPLATE);
                 <?php if($galeria): ?>
                     <div class="mt-2 d-flex flex-wrap gap-2">
                         <?php foreach($galeria as $img): ?>
-                            <img src="<?php echo BASEURL . $img['imagem_url']; ?>" style="height: 60px; border-radius: 8px;">
+                            <?php if (local_image_exists($img['imagem_url'])): ?>
+                                <img src="<?php echo BASEURL . htmlspecialchars($img['imagem_url'], ENT_QUOTES, 'UTF-8'); ?>" style="height: 60px; border-radius: 8px;">
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
