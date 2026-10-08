@@ -229,4 +229,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // =============================================
+    // SCROLL REVEAL (a animação fica no style.css)
+    // =============================================
+
+    var revealSelector = 'h1, h2, h3, p, img, form, .card, .testimonial-card, .hero-section, .accordion-item, .alert';
+
+    if ('IntersectionObserver' in window) {
+        var revealObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                // Revela com 30% visível (ou 30% da tela, para elementos muito altos)
+                var visibleEnough = entry.intersectionRatio >= 0.3 ||
+                    entry.intersectionRect.height >= window.innerHeight * 0.3;
+                if (visibleEnough) {
+                    entry.target.classList.add('is-visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: [0, 0.05, 0.1, 0.2, 0.3] });
+
+        document.querySelectorAll('main ' + revealSelector.split(', ').join(', main ')).forEach(function (el) {
+            // Anima só o elemento mais externo, nunca um dentro do outro
+            if (el.parentElement && el.parentElement.closest(revealSelector)) return;
+            el.classList.add('scroll-reveal');
+            revealObserver.observe(el);
+        });
+    }
+
 });

@@ -1602,3 +1602,41 @@ body.dark-mode .dashboard-kpi-light h1,
 body.dark-mode .dashboard-kpi-light p {
     color: #3f3028 !important;
 }
+
+/* ==========================================================
+   Scroll reveal — o elemento surge ao entrar na tela: desliza 16px,
+   tira o blur de 8px e aparece. O JS (main.js) só marca quando ele
+   fica visível; a animação é toda aqui. Usa "translate" em vez de
+   "transform" para não brigar com os efeitos de hover dos cards.
+   ========================================================== */
+@keyframes scroll-reveal {
+    from {
+        opacity: 0;
+        translate: 0 16px;
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        translate: none;
+        filter: none;
+    }
+}
+
+@keyframes scroll-reveal-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.scroll-reveal {
+    opacity: 0;
+}
+
+.scroll-reveal.is-visible {
+    animation: scroll-reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-reveal.is-visible {
+        animation-name: scroll-reveal-fade;
+    }
+}

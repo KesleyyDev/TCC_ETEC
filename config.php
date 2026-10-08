@@ -4,9 +4,20 @@ if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . DIRECTORY_SEPARATOR);
 }
 
-/** Caminho no servidor para o sistema. */
+/** Caminho no servidor para o sistema, detectado a partir da pasta do projeto. */
 if (!defined('BASEURL')) {
-    define('BASEURL', '/TCC/');
+    $baseUrl = getenv('TCC_BASEURL') ?: '/';
+    if (getenv('TCC_BASEURL') === false) {
+        $docRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');
+        $appRoot = realpath(__DIR__);
+        if ($docRoot !== false && $appRoot !== false &&
+            stripos($appRoot, $docRoot) === 0) {
+            $relative = str_replace('\\', '/', substr($appRoot, strlen($docRoot)));
+            $baseUrl = '/' . trim($relative, '/') . '/';
+            $baseUrl = str_replace('//', '/', $baseUrl);
+        }
+    }
+    define('BASEURL', $baseUrl);
 }
 
 /** Configuração do banco. Em produção, informe os valores por variáveis de ambiente. */
